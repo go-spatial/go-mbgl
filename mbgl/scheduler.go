@@ -8,24 +8,37 @@ import "C"
 // Represents the scheduler super class
 type Scheduler interface {
 	scheduler() *C.MbglScheduler
+	Destruct()
 }
 
-// Satisfies the schduler super class
+// Satisfies the schduler inteface
 type scheduler struct {
 	ptr *C.MbglScheduler
 }
 
-func (s scheduler) scheduler() *C.MbglScheduler {
+func (s *scheduler) scheduler() *C.MbglScheduler {
 	return s.ptr
+}
+
+func (s *scheduler) Destruct() {
+	C.mbgl_scheduler_destruct(s.ptr)
 }
 
 func SchedulerGetCurrent() Scheduler {
 	ptr := C.mbgl_scheduler_get_current()
-	return scheduler{
+	if ptr == nil {
+		return nil
+	}
+
+	return &scheduler{
 		ptr: ptr,
 	}
 }
 
 func SchedulerSetCurrent(sched Scheduler) {
-	C.mbgl_scheduler_set_current(sched.scheduler())
+	if sched == nil {
+		C.mbgl_scheduler_set_current(nil)
+	} else {
+		C.mbgl_scheduler_set_current(sched.scheduler())
+	}
 }

@@ -1,36 +1,31 @@
-package mbgl
+package mbgl_test
 
 import (
 	"testing"
-	"fmt"
+	"github.com/go-spatial/go-mbgl/mbgl"
 )
 
 func TestScheduler(t *testing.T) {
 	type tcase struct {
-		sched Scheduler
+		sched mbgl.Scheduler
 	}
 
 	fn := func(tc tcase, t *testing.T) {
-		SchedulerSetCurrent(tc.sched)
+		mbgl.SchedulerSetCurrent(tc.sched)
 
-		sched := SchedulerGetCurrent()
+		sched := mbgl.SchedulerGetCurrent()
 
 		if (sched == nil) != (tc.sched == nil) {
-			fmt.Printf("%p, %v\n", tc.sched, tc.sched == nil)
 			t.Fatalf("incorrect value %v, expected %v", sched, tc.sched)
-		} else if tc.sched == nil {
-			// they are both nil, pass
-		} else if sched.scheduler() != tc.sched.scheduler() {
-			t.Fatalf("incorrect value %v, expected %v",sched.scheduler(), tc.sched.scheduler())
 		}
 	}
 
 	testcases := map[string]tcase{
 		"1" : {
-			sched: NewThreadPool(1),
+			sched: mbgl.NewThreadPool(1),
 		},
 		"2" : {
-			sched: NewThreadPool(4),
+			sched: mbgl.NewThreadPool(4),
 		},
 		"nil" : {
 			sched: nil,
