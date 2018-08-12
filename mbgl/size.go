@@ -10,7 +10,7 @@ type Size struct {
 	ptr *C.MbglSize
 }
 
-func (s Size) update() {
+func (s *Size) update() {
 
 	if s.ptr == nil {
 		s.ptr = C.mbgl_size_new(C.uint32_t(s.Width), C.uint32_t(s.Height))
@@ -19,13 +19,13 @@ func (s Size) update() {
 	}
 }
 
-// called internally
-func (s Size) cSize() *C.MbglSize {
+// called within the package
+func (s *Size) cSize() *C.MbglSize {
 	s.update()
 	return s.ptr
 }
 
-func (s Size) Destruct() {
+func (s *Size) Destruct() {
 	if s.ptr != nil {
 		C.mbgl_size_destruct(s.ptr)
 		s.ptr = nil

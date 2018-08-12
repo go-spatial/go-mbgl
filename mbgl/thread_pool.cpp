@@ -10,6 +10,7 @@ MbglThreadPool * mbgl_thread_pool_new(int threads) {
 }
 
 
-void mbgl_thread_pool_destruct(MbglThreadPool * ptr) {
-    delete reinterpret_cast<ThreadPool*>(ptr);
+void mbgl_thread_pool_destruct(MbglThreadPool * self) {
+    auto cast = reinterpret_cast<ThreadPool*>(self);
+    delete cast;
 }

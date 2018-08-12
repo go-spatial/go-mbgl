@@ -9,7 +9,7 @@ extern "C"{
 
 MbglThreadPool *mbgl_thread_pool_new(int threads);
 
-void mbgl_thread_pool_destruct(MbglThreadPool *ptr);
+void mbgl_thread_pool_destruct(MbglThreadPool * self);
 
 #ifdef __cplusplus
 }
