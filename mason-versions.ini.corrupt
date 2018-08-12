@@ -1,0 +1,4 @@
+the following packges were removed from the mason-version.ini file because they could not be fetched
+
+[compiled]
+mesa=13.0.4

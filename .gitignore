@@ -1,2 +1,4 @@
+*.o
 mason_packages/
 .idea/
+.DS_Store
