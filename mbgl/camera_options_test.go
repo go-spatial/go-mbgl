@@ -43,7 +43,6 @@ func TestCameraOptions(t *testing.T) {
 				{},
 			},
 		},
-
 		"2": {
 			[]coptions{
 				{},
