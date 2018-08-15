@@ -130,6 +130,21 @@ void mbgl_map_snapshotter_set_region(MbglMapSnapshotter * self, MbglLatLngBounds
     ms->setRegion(*_region);
 }
 
+void mbgl_map_snapshotter_set_style_url(MbglMapSnapshotter * self, const char * style);
+ {
+    auto ms = reinterpret_cast<MapSnapshotter*>(self);
+    ms->setStyleURL(std::string(style));
+ }
+
+void mbgl_map_snapshotter_set_size(MbglMapSnapshotter * self, MbglSize * size) {
+    auto ms = reinterpret_cast<MapSnapshotter*>(self);
+    auto _size = reinterpret_cast<Size*>(size);
+
+    ms->setSize(_size);
+}
+
+// image
+
 RawImage * mbgl_premultiplied_image_raw(MbglPremultipliedImage * img) {
     auto _img = reinterpret_cast<PremultipliedImage*>(img);
 
@@ -141,8 +156,7 @@ RawImage * mbgl_premultiplied_image_raw(MbglPremultipliedImage * img) {
     return ret;
 }
 
-void mbgl_premultiplied_image_raw_delete(MbglPremultipliedImage * self) {
+void mbgl_premultiplied_image_destruct(MbglPremultipliedImage * self) {
     auto cast = reinterpret_cast<PremultipliedImage*>(self);
-
     delete cast;
 }

@@ -38,6 +38,10 @@ void mbgl_map_snapshotter_set_camera_options(MbglMapSnapshotter * self, MbglCame
 
 void mbgl_map_snapshotter_set_region(MbglMapSnapshotter * self, MbglLatLngBounds * region);
 
+void mbgl_map_snapshotter_set_style_url(MbglMapSnapshotter * self, const char * style);
+
+void mbgl_map_snapshotter_set_size(MbglMapSnapshotter * self, MbglSize * size);
+
 void mbgl_map_snapshotter_destruct(MbglMapSnapshotter * self);
 
 // image

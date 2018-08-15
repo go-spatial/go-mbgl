@@ -72,6 +72,14 @@ func (ms MapSnapshotter) SetRegion(region *LatLngBounds) {
 	C.mbgl_map_snapshotter_set_region(ms.ptr, region.ptr)
 }
 
+func (ms MapSnapshotter) SetStyleURL(style string) {
+	C.mbgl_map_snapshotter_set_style_url(C.CString(style))
+}
+
+func (ms MapSnapshotter) SetSize(size Size) {
+	C.mbgl_map_snapshotter_set_size(size.cSize())
+}
+
 func (ms *MapSnapshotter) Destruct() {
 	C.mbgl_map_snapshotter_destruct(ms.ptr)
 	ms.ptr = nil
@@ -92,6 +100,11 @@ func (im PremultipliedImage) Image() image.Image {
 		height: int(raw.height),
 	}
 
+}
+
+func (im *PremultipliedImage) Destruct() {
+	C.mbgl_premultiplied_image_destruct(im.ptr)
+	im.ptr = nil
 }
 
 type img struct {
