@@ -15,6 +15,7 @@ type MapSnapshotter struct {
 	ptr *C.MbglMapSnapshotter
 }
 
+
 func NewMapSnapshotter(src FileSource,
 	sched Scheduler,
 	style string,
@@ -64,7 +65,11 @@ func (ms MapSnapshotter) Snapshot() *PremultipliedImage {
 }
 
 func (ms MapSnapshotter) SetCameraOptions(camOpts CameraOptions) {
-	C.mbgl_map_snapshotter_set_camera_options(ms.ptr, camOpts.ptr)
+	C.mbgl_map_snapshotter_set_camera_options(ms.ptr, camOpts.cPtr())
+}
+
+func (ms MapSnapshotter) SetRegion(region *LatLngBounds) {
+	C.mbgl_map_snapshotter_set_region(ms.ptr, region.ptr)
 }
 
 func (ms *MapSnapshotter) Destruct() {

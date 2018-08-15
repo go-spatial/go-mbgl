@@ -36,6 +36,8 @@ MbglPremultipliedImage * mbgl_map_snapshotter_snapshot(MbglMapSnapshotter * self
 
 void mbgl_map_snapshotter_set_camera_options(MbglMapSnapshotter * self, MbglCameraOptions * camOpts);
 
+void mbgl_map_snapshotter_set_region(MbglMapSnapshotter * self, MbglLatLngBounds * region);
+
 void mbgl_map_snapshotter_destruct(MbglMapSnapshotter * self);
 
 // image

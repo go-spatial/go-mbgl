@@ -89,7 +89,7 @@ MbglPremultipliedImage * mbgl_map_snapshotter_snapshot(MbglMapSnapshotter * self
 //                    }
 //                }
 
-                std::cout << "cb unlocked" << std::endl;});
+                });
 
     ms->snapshot(cb->self());
 
@@ -98,9 +98,6 @@ MbglPremultipliedImage * mbgl_map_snapshotter_snapshot(MbglMapSnapshotter * self
     while(!img1.valid() && !err1) {
         mbgl::util::RunLoop::Get()->runOnce();
     }
-
-
-    std::cout << "waiting on lock" << std::endl;
 
 
     std::string errStr;
@@ -124,6 +121,13 @@ void mbgl_map_snapshotter_set_camera_options(MbglMapSnapshotter * self, MbglCame
     auto _camOpts = reinterpret_cast<CameraOptions*>(camOpts);
 
     ms->setCameraOptions(*_camOpts);
+}
+
+void mbgl_map_snapshotter_set_region(MbglMapSnapshotter * self, MbglLatLngBounds * region) {
+    auto ms = reinterpret_cast<MapSnapshotter*>(self);
+    auto _region = reinterpret_cast<LatLngBounds*>(region);
+
+    ms->setRegion(*_region);
 }
 
 RawImage * mbgl_premultiplied_image_raw(MbglPremultipliedImage * img) {

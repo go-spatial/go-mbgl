@@ -5,6 +5,8 @@ import (
 	"image/png"
 	"os"
 	"fmt"
+	"github.com/go-spatial/geom/slippy"
+	"github.com/go-spatial/geom"
 )
 
 func TestNewMapSnapshotter(t *testing.T) {
@@ -53,7 +55,7 @@ func TestNewMapSnapshotter(t *testing.T) {
 	}
 }
 
-func TestSnapshot(t *testing.T) {
+func TestSnapshotterSnapshot(t *testing.T) {
 	type tcase struct {
 		ms *MapSnapshotter
 	}
@@ -96,6 +98,106 @@ func TestSnapshot(t *testing.T) {
 				nil,
 				nil,
 				nil),
+		},
+	}
+
+	for k, v := range testcases {
+		t.Run(k, func(t *testing.T) {
+			fn(v, t)
+		})
+	}
+}
+
+func TestSnapshotterSetCamOpts(t *testing.T) {
+	type tcase struct {
+		opts []CameraOptions
+	}
+
+	fn := func (tc tcase, t *testing.T) {
+		tpool := NewThreadPool(4)
+		SchedulerSetCurrent(tpool)
+
+		ms := NewMapSnapshotter(
+			NewDefaultFileSource("", "", nil),
+			tpool,
+			"https://osm.tegola.io/maps/osm/style.json",
+			Size{Height: 100, Width: 100},
+			1.0,
+			&tc.opts[0],
+			nil,
+			nil)
+
+		defer ms.Destruct()
+
+		ms.Snapshot()
+
+		for _, v := range tc.opts[1:] {
+			ms.SetCameraOptions(v)
+			ms.Snapshot()
+		}
+	}
+
+	testcases := map[string]tcase {
+		"1": {
+			opts: []CameraOptions{
+				{},
+				{
+					Center: NewLatLng(33, 117),
+					Padding: NewEdgeInsets(10, 10, 10, 10),
+				},
+			},
+		},
+	}
+
+	for k, v := range testcases {
+		t.Run(k, func (t *testing.T) {
+			fn(v, t)
+		})
+	}
+}
+
+
+func TestSnapshotterSetRegion(t *testing.T) {
+	type tcase struct {
+		bounds []*LatLngBounds
+	}
+
+	fn := func(tc tcase, t * testing.T) {
+		tpool := NewThreadPool(4)
+		SchedulerSetCurrent(tpool)
+
+		ms := NewMapSnapshotter(
+			NewDefaultFileSource("","", nil),
+			tpool,
+			"https://osm.tegola.io/maps/osm/style.json",
+			Size{Height: 100, Width: 100},
+			1.0,
+			nil,
+			tc.bounds[0],
+			nil)
+		defer ms.Destruct()
+
+		ms.Snapshot()
+
+
+		for _, v := range tc.bounds[1:] {
+			ms.SetRegion(v)
+			ms.Snapshot()
+		}
+	}
+
+	testcases := map[string]tcase {
+		"1" : {
+			bounds: []*LatLngBounds {
+				NewLatLngBoundsFromTile(slippy.NewTile(0, 0, 0, 0, geom.WebMercator)),
+				NewLatLngBoundsFromTile(slippy.NewTile(12, 212, 6079, 0, geom.WebMercator)),
+			},
+		},
+		"2": {
+			bounds: []*LatLngBounds {
+				nil,
+				NewLatLngBounds(NewLatLng(33, 117), NewLatLng(34, 118)),
+			},
 		},
 	}
 
