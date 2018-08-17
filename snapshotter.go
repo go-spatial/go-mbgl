@@ -35,7 +35,7 @@ func Snapshot(src string, ext *geom.Extent, size image.Point) image.Image {
 
 func NewSnapshotter(style string) Snapshotter {
 	src := mbgl.NewDefaultFileSource("", "", nil)
-	runtime.SetFinalizer(src, (*src).Destruct)
+	runtime.SetFinalizer(src, (*mbgl.DefaultFileSource).Destruct)
 
 	tpool := mbgl.NewThreadPool(4)
 	mbgl.SchedulerSetCurrent(tpool)
@@ -51,7 +51,7 @@ func NewSnapshotter(style string) Snapshotter {
 		nil,
 		nil)
 
-	runtime.SetFinalizer(ret, (*ret).Destruct)
+	runtime.SetFinalizer(ret, (*mbgl.MapSnapshotter).Destruct)
 
 	return &snapshotter{
 		fsrc: src,
@@ -84,6 +84,6 @@ func (s *snapshotter) Snapshot(extent *geom.Extent, size image.Point) image.Imag
 }
 
 func (s *snapshotter) SnapshotTile(tile slippy.Tile, size image.Point) image.Image {
-	ext, _ := tile.Extent()
+	ext := tile.Extent(geom.WGS84)
 	return s.Snapshot(ext, size)
 }

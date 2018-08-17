@@ -9,6 +9,7 @@ import (
 	"image"
 	"image/color"
 	"unsafe"
+	"fmt"
 )
 
 type MapSnapshotter struct {
@@ -73,11 +74,13 @@ func (ms MapSnapshotter) SetRegion(region *LatLngBounds) {
 }
 
 func (ms MapSnapshotter) SetStyleURL(style string) {
-	C.mbgl_map_snapshotter_set_style_url(C.CString(style))
+	fmt.Println("setting style, ", style)
+	C.mbgl_map_snapshotter_set_style_url(ms.ptr, C.CString(style))
+	fmt.Println("style set")
 }
 
 func (ms MapSnapshotter) SetSize(size Size) {
-	C.mbgl_map_snapshotter_set_size(size.cSize())
+	C.mbgl_map_snapshotter_set_size(ms.ptr, size.cSize())
 }
 
 func (ms *MapSnapshotter) Destruct() {

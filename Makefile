@@ -28,11 +28,11 @@ CGO_CXXFLAGS=$(INCLUDES)
 GO_FLAGS=CGO_CXXFLAGS="$(CGO_CXXFLAGS)"
 
 run=
+dir=./...
 
 .PHONY: test
 test:
-	$(GO_FLAGS) go test -v ./... --run=$(run)
-
+	$(GO_FLAGS) go test -v $(dir) --run=$(run)
 
 f=
 .PHONY: dwfile

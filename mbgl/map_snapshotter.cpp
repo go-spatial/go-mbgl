@@ -35,7 +35,7 @@ MbglMapSnapshotter * mbgl_map_snapshotter_new(
 
     auto _src = reinterpret_cast<FileSource *>(src);
     auto _sched = reinterpret_cast<Scheduler*>(sched);
-    auto _style = std::make_pair((bool) isFile, std::string(style));
+    auto _style = std::make_pair((bool) false /*isFile*/, std::string(style));
     auto _size = reinterpret_cast<Size*>(size);
     auto _camOpts = reinterpret_cast<CameraOptions*>(camOpts);
     auto _region = reinterpret_cast<LatLngBounds*>(region);
@@ -130,17 +130,19 @@ void mbgl_map_snapshotter_set_region(MbglMapSnapshotter * self, MbglLatLngBounds
     ms->setRegion(*_region);
 }
 
-void mbgl_map_snapshotter_set_style_url(MbglMapSnapshotter * self, const char * style);
- {
+void mbgl_map_snapshotter_set_style_url(MbglMapSnapshotter * self, const char * style) {
+    std::cout << "setting style: " << std::string(style) << std::endl;
     auto ms = reinterpret_cast<MapSnapshotter*>(self);
     ms->setStyleURL(std::string(style));
+
+    std::cout << "set style: " << ms->getStyleURL() << std::endl;
  }
 
 void mbgl_map_snapshotter_set_size(MbglMapSnapshotter * self, MbglSize * size) {
     auto ms = reinterpret_cast<MapSnapshotter*>(self);
     auto _size = reinterpret_cast<Size*>(size);
 
-    ms->setSize(_size);
+    ms->setSize(*_size);
 }
 
 // image

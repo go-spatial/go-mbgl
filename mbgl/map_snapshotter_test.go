@@ -6,7 +6,8 @@ import (
 	"os"
 	"fmt"
 	"github.com/go-spatial/geom/slippy"
-	"github.com/go-spatial/geom"
+	"path/filepath"
+	"strings"
 )
 
 func TestNewMapSnapshotter(t *testing.T) {
@@ -65,20 +66,23 @@ func TestSnapshotterSnapshot(t *testing.T) {
 		img := cImg.Image()
 
 		fname := os.DevNull
-		if evar := os.Getenv("MBGL_TEST_ON_DISK"); evar != "" {
+		if evar := os.Getenv("MBGL_TEST_OUT_DIR"); evar != "" {
 			fmt.Println("outputing to ",evar)
-			fname = evar
+			os.MkdirAll(evar, 0600)
+
+			fname = strings.Replace(t.Name(), "/", "-", -1)
+			fname = filepath.Join(evar,  fname + ".png")
 		}
 
-		f, err := os.OpenFile(fname, os.O_WRONLY | os.O_CREATE, 0600)
+		f, err := os.OpenFile(fname, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0600)
 		if err != nil {
-			t.Fatalf("unexpected errro %v", err)
+			t.Fatalf("unexpected error %v", err)
 		}
 		defer f.Close()
 
 		err = png.Encode(f, img)
 		if err != nil {
-			t.Fatalf("unexpected errro %v", err)
+			t.Fatalf("unexpected error %v", err)
 		}
 
 		tc.ms.Destruct()
@@ -189,8 +193,8 @@ func TestSnapshotterSetRegion(t *testing.T) {
 	testcases := map[string]tcase {
 		"1" : {
 			bounds: []*LatLngBounds {
-				NewLatLngBoundsFromTile(slippy.NewTile(0, 0, 0, 0, geom.WebMercator)),
-				NewLatLngBoundsFromTile(slippy.NewTile(12, 212, 6079, 0, geom.WebMercator)),
+				NewLatLngBoundsFromTile(slippy.NewTile(0, 0, 0, 0)),
+				NewLatLngBoundsFromTile(slippy.NewTile(12, 212, 6079, 0)),
 			},
 		},
 		"2": {
