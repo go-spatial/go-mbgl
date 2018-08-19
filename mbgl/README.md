@@ -24,3 +24,5 @@ This directory contains direct go bindings against the Mapbox GL Native C++ API.
 
 > It is not guaranteed that a finalizer will run if the size of *obj is zero bytes.
 > https://golang.org/pkg/runtime/#SetFinalizer
+
+* after calling `(T).Destruct()` make sure to not reuse the variable, this will result in strange errors; another `(T).Destruct()` call might yeild something like "freed block must be allocated with malloc".

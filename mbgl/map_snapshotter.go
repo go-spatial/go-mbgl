@@ -12,9 +12,7 @@ import (
 	"fmt"
 )
 
-type MapSnapshotter struct {
-	ptr *C.MbglMapSnapshotter
-}
+type MapSnapshotter C.MbglMapSnapshotter
 
 
 func NewMapSnapshotter(src FileSource,
@@ -38,7 +36,7 @@ func NewMapSnapshotter(src FileSource,
 
 		var _region *C.MbglLatLngBounds
 		if region != nil {
-			_region = region.ptr
+			_region = region.latLngBounds()
 		}
 
 		var _cacheDir *C.char
@@ -57,43 +55,48 @@ func NewMapSnapshotter(src FileSource,
 			_region,
 			_cacheDir)
 
-		return &MapSnapshotter{ptr:ptr}
+		return (*MapSnapshotter)(ptr)
 }
 
-func (ms MapSnapshotter) Snapshot() *PremultipliedImage {
-	ptr := C.mbgl_map_snapshotter_snapshot(ms.ptr)
-	return &PremultipliedImage{ptr:ptr}
+func (ms *MapSnapshotter) mapSnapshotter() *C.MbglMapSnapshotter {
+	return (*C.MbglMapSnapshotter)(ms)
 }
 
-func (ms MapSnapshotter) SetCameraOptions(camOpts CameraOptions) {
-	C.mbgl_map_snapshotter_set_camera_options(ms.ptr, camOpts.cPtr())
+func (ms *MapSnapshotter) Snapshot() *PremultipliedImage {
+	ptr := C.mbgl_map_snapshotter_snapshot(ms.mapSnapshotter())
+	return (*PremultipliedImage)(ptr)
 }
 
-func (ms MapSnapshotter) SetRegion(region *LatLngBounds) {
-	C.mbgl_map_snapshotter_set_region(ms.ptr, region.ptr)
+func (ms *MapSnapshotter) SetCameraOptions(camOpts CameraOptions) {
+	C.mbgl_map_snapshotter_set_camera_options(ms.mapSnapshotter(), camOpts.cPtr())
 }
 
-func (ms MapSnapshotter) SetStyleURL(style string) {
+func (ms *MapSnapshotter) SetRegion(region *LatLngBounds) {
+	C.mbgl_map_snapshotter_set_region(ms.mapSnapshotter(), region.latLngBounds())
+}
+
+func (ms *MapSnapshotter) SetStyleURL(style string) {
 	fmt.Println("setting style, ", style)
-	C.mbgl_map_snapshotter_set_style_url(ms.ptr, C.CString(style))
+	C.mbgl_map_snapshotter_set_style_url(ms.mapSnapshotter(), C.CString(style))
 	fmt.Println("style set")
 }
 
-func (ms MapSnapshotter) SetSize(size Size) {
-	C.mbgl_map_snapshotter_set_size(ms.ptr, size.cSize())
+func (ms *MapSnapshotter) SetSize(size Size) {
+	C.mbgl_map_snapshotter_set_size(ms.mapSnapshotter(), size.cSize())
 }
 
 func (ms *MapSnapshotter) Destruct() {
-	C.mbgl_map_snapshotter_destruct(ms.ptr)
-	ms.ptr = nil
+	C.mbgl_map_snapshotter_destruct(ms.mapSnapshotter())
 }
 
-type PremultipliedImage struct {
-	ptr *C.MbglPremultipliedImage
+type PremultipliedImage C.MbglPremultipliedImage
+
+func (im *PremultipliedImage) premultipliedImage() *C.MbglPremultipliedImage {
+	return (*C.MbglPremultipliedImage)(im)
 }
 
-func (im PremultipliedImage) Image() image.Image {
-	raw := C.mbgl_premultiplied_image_raw(im.ptr)
+func (im *PremultipliedImage) Image() image.Image {
+	raw := C.mbgl_premultiplied_image_raw(im.premultipliedImage())
 
 	bytes := int(raw.width) * int(raw.height) * 4
 
@@ -106,8 +109,7 @@ func (im PremultipliedImage) Image() image.Image {
 }
 
 func (im *PremultipliedImage) Destruct() {
-	C.mbgl_premultiplied_image_destruct(im.ptr)
-	im.ptr = nil
+	C.mbgl_premultiplied_image_destruct(im.premultipliedImage())
 }
 
 type img struct {

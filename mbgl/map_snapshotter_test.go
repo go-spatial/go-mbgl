@@ -8,6 +8,7 @@ import (
 	"github.com/go-spatial/geom/slippy"
 	"path/filepath"
 	"strings"
+	"github.com/arolek/p"
 )
 
 func TestNewMapSnapshotter(t *testing.T) {
@@ -38,7 +39,7 @@ func TestNewMapSnapshotter(t *testing.T) {
 
 	testcases := map[string]tcase{
 		"1": {
-			src:        NewDefaultFileSource("", "", nil),
+			src:        NewDefaultFileSource("", "", p.Uint64(0)),
 			sched:      NewThreadPool(4),
 			style:      "https://osm.tegola.io/maps/osm/style.json",
 			size:       Size{Width: 100, Height: 100},
@@ -94,7 +95,7 @@ func TestSnapshotterSnapshot(t *testing.T) {
 	testcases := map[string]tcase{
 		"1": {
 			ms: NewMapSnapshotter(
-				NewDefaultFileSource("", "", nil),
+				NewDefaultFileSource("", "", p.Uint64(0)),
 				tpool,
 				"https://osm.tegola.io/maps/osm/style.json",
 				Size{Height: 100, Width: 100},
@@ -122,7 +123,7 @@ func TestSnapshotterSetCamOpts(t *testing.T) {
 		SchedulerSetCurrent(tpool)
 
 		ms := NewMapSnapshotter(
-			NewDefaultFileSource("", "", nil),
+			NewDefaultFileSource("", "", p.Uint64(0)),
 			tpool,
 			"https://osm.tegola.io/maps/osm/style.json",
 			Size{Height: 100, Width: 100},
@@ -171,7 +172,7 @@ func TestSnapshotterSetRegion(t *testing.T) {
 		SchedulerSetCurrent(tpool)
 
 		ms := NewMapSnapshotter(
-			NewDefaultFileSource("","", nil),
+			NewDefaultFileSource("","", p.Uint64(0)),
 			tpool,
 			"https://osm.tegola.io/maps/osm/style.json",
 			Size{Height: 100, Width: 100},

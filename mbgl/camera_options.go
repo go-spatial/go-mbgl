@@ -6,8 +6,10 @@ import "C"
  */
 import "C"
 
-type EdgeInsets struct {
-	ptr *C.MbglEdgeInsets
+type EdgeInsets C.MbglEdgeInsets
+
+func (ei *EdgeInsets) edgeInsets() *C.MbglEdgeInsets {
+	return (*C.MbglEdgeInsets)(ei)
 }
 
 func NewEdgeInsets(top, left, bottom, right float64) *EdgeInsets {
@@ -18,11 +20,11 @@ func NewEdgeInsets(top, left, bottom, right float64) *EdgeInsets {
 		C.double(right),
 	)
 
-	return &EdgeInsets{ptr:ptr}
+	return (*EdgeInsets)(ptr)
 }
 
 func (ei *EdgeInsets) Destruct() {
-	C.mbgl_edge_insets_destruct(ei.ptr)
+	C.mbgl_edge_insets_destruct(ei.edgeInsets())
 }
 
 type Point struct {
@@ -69,12 +71,12 @@ func (opt *CameraOptions) update() {
 	// todo (@ear7h): change structs to wrapped types
 	var center *C.MbglLatLng
 	if opt.Center != nil {
-		center = opt.Center.ptr
+		center = opt.Center.latLng()
 	}
 
 	var padding *C.MbglEdgeInsets
 	if opt.Padding != nil {
-		padding = opt.Padding.ptr
+		padding = opt.Padding.edgeInsets()
 	}
 
 	if opt.ptr == nil {

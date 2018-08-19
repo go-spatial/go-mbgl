@@ -8,6 +8,7 @@ import (
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/go-mbgl/mbgl"
 	"github.com/go-spatial/geom/slippy"
+	"github.com/arolek/p"
 )
 
 // This will set the size of the mbgl::ThreadPool
@@ -38,27 +39,30 @@ func (s snapshotter) destruct() {
 
 
 // High level function for taking a single snappshot. This simply creates a new snapshotter and uses it.
-func Snapshot(style string, ext *geom.Extent, size image.Point) image.Image {
-	return NewSnapshotter(style).Snapshot(ext, size)
+func Snapshot(style string, ext *geom.Extent, size image.Point, pixelRatio float32) image.Image {
+	return NewSnapshotter(style, pixelRatio).Snapshot(ext, size)
 }
 
 // This creates an instance of a Snapshotter with the specified style.
 // Note: this high level implementation is thread safe, but performance might be better to lower the DefaultThreadPoolSize and use multiple snapshotters
 // TODO(@ear7h): write benchmarks
-func NewSnapshotter(style string) Snapshotter {
-	src := mbgl.NewDefaultFileSource("", "", nil)
-	runtime.SetFinalizer(src, (*mbgl.DefaultFileSource).Destruct)
+func NewSnapshotter(style string, pixelRatio float32) Snapshotter {
+	src := mbgl.NewDefaultFileSource("", "", p.Uint64(0))
 
 	tpool := mbgl.NewThreadPool(DefaultThreadPoolSize)
 	mbgl.SchedulerSetCurrent(tpool)
 
 	size := mbgl.Size{Width: 100, Height: 100}
 
+	if pixelRatio == 0 {
+		pixelRatio = 1.0
+	}
+
 	snap := mbgl.NewMapSnapshotter(src,
 		tpool,
 		style,
 		size,
-		1.0,
+		pixelRatio,
 		nil,
 		nil,
 		nil)
@@ -69,6 +73,8 @@ func NewSnapshotter(style string) Snapshotter {
 		size: size,
 	}
 
+	// finalizer has to be on Go composite objecte because mbgl
+	// types are pointers to empty structs as far as go knows
 	runtime.SetFinalizer(ret, (*snapshotter).destruct)
 
 	return ret

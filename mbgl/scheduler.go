@@ -12,16 +12,14 @@ type Scheduler interface {
 }
 
 // Satisfies the schduler inteface
-type scheduler struct {
-	ptr *C.MbglScheduler
-}
+type scheduler C.MbglScheduler
 
 func (s *scheduler) scheduler() *C.MbglScheduler {
-	return s.ptr
+	return (*C.MbglScheduler)(s)
 }
 
 func (s *scheduler) Destruct() {
-	C.mbgl_scheduler_destruct(s.ptr)
+	C.mbgl_scheduler_destruct(s.scheduler())
 }
 
 func SchedulerGetCurrent() Scheduler {
@@ -30,9 +28,7 @@ func SchedulerGetCurrent() Scheduler {
 		return nil
 	}
 
-	return &scheduler{
-		ptr: ptr,
-	}
+	return (*scheduler)(ptr)
 }
 
 func SchedulerSetCurrent(sched Scheduler) {
