@@ -90,11 +90,12 @@ func (s *snapshotter) Snapshot(extent *geom.Extent, size image.Point) image.Imag
 	// changed through the lifetime of the snapshot routine
 	s.snapLock.Lock()
 
-	s.snap.SetRegion(mbgl.NewLatLngBounds(a, b))
 
 	s.size.Width = uint32(size.X)
 	s.size.Height = uint32(size.Y)
 	s.snap.SetSize(s.size)
+
+	s.snap.SetRegion(mbgl.NewLatLngBounds(a, b))
 
 	_img := s.snap.Snapshot()
 

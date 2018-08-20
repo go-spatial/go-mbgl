@@ -87,6 +87,18 @@ func TestSnapshot(t *testing.T) {
 			size: image.Pt(500, 500),
 			ratio: 0.5,
 		},
+		"6": {
+			src: "https://osm.tegola.io/maps/osm/style.json",
+			ext: exts["1"],
+			size: image.Pt(500, 500),
+			ratio: 1.0,
+		},
+		"7": {
+			src: "https://osm.tegola.io/maps/osm/style.json",
+			ext: exts["1"],
+			size: image.Pt(2000, 2000),
+			ratio: 1.0,
+		},
 		"small": {
 			src: "https://osm.tegola.io/maps/osm/style.json",
 			ext: exts["1"],
