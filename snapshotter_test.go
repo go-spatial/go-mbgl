@@ -46,13 +46,13 @@ func TestSnapshot(t *testing.T) {
 
 	exts := make(map[string]*geom.Extent)
 
-	tile := slippy.NewTileLatLon(12, 33, 117, 0, geom.WebMercator)
+	tile := slippy.NewTileLatLon(12, 33, 117)
 
-	exts["1"] = tile.Extent(geom.WGS84)
+	exts["1"] = tile.Extent4326()
 
 	z, x, y := tile.ZXY()
-	tile = slippy.NewTile(z, x + 1, y, 0)
-	exts["2"] = tile.Extent(geom.WGS84)
+	tile = slippy.NewTile(z, x + 1, y)
+	exts["2"] = tile.Extent4326()
 
 	fmt.Println(exts["1"])
 

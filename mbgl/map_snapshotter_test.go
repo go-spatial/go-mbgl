@@ -194,8 +194,8 @@ func TestSnapshotterSetRegion(t *testing.T) {
 	testcases := map[string]tcase {
 		"1" : {
 			bounds: []*LatLngBounds {
-				NewLatLngBoundsFromTile(slippy.NewTile(0, 0, 0, 0)),
-				NewLatLngBoundsFromTile(slippy.NewTile(12, 212, 6079, 0)),
+				NewLatLngBoundsFromTile(slippy.NewTile(0, 0, 0)),
+				NewLatLngBoundsFromTile(slippy.NewTile(12, 212, 6079)),
 			},
 		},
 		"2": {

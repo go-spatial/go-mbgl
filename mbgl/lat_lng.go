@@ -34,7 +34,7 @@ func NewLatLngBounds(a, b *LatLng) *LatLngBounds {
 
 func NewLatLngBoundsFromTile(tile *slippy.Tile) *LatLngBounds {
 	// east, north, west, south
-	bound := tile.Bounds()
+	bound := tile.Extent4326()
 	a := NewLatLng(bound[1], bound[0])
 	b := NewLatLng(bound[3], bound[2])
 

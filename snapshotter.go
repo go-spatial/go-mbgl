@@ -117,7 +117,7 @@ func (s *snapshotter) SetStyle(style string) {
 }
 
 func SnapshotTile(s Snapshotter, tile slippy.Tile, size image.Point) image.Image {
-	ext := tile.Extent(geom.WGS84)
+	ext := tile.Extent4326()
 	return s.Snapshot(ext, size)
 }
 
