@@ -1,9 +1,10 @@
 package mbgl
-import "C"
 
 /*
+#cgo CXXFLAGS:-I${SRCDIR}/../mapbox-gl-native/include
+#cgo CXXFLAGS:-I${SRCDIR}/../mapbox-gl-native/platform/default
 #include "camera_options.h"
- */
+*/
 import "C"
 
 type EdgeInsets C.MbglEdgeInsets
@@ -49,19 +50,21 @@ func (p *Point) update() {
 }
 
 func (p *Point) cPtr() *C.MbglPoint {
-	if p == nil {return nil}
+	if p == nil {
+		return nil
+	}
 
 	p.update()
 	return p.ptr
 }
 
 type CameraOptions struct {
-	Center *LatLng
+	Center  *LatLng
 	Padding *EdgeInsets
-	Anchor *Point
-	Zoom *float64
-	Angle *float64
-	Pitch *float64
+	Anchor  *Point
+	Zoom    *float64
+	Angle   *float64
+	Pitch   *float64
 
 	ptr *C.MbglCameraOptions
 }
@@ -101,7 +104,9 @@ func (opt *CameraOptions) update() {
 }
 
 func (opt *CameraOptions) cPtr() *C.MbglCameraOptions {
-	if opt == nil {return nil}
+	if opt == nil {
+		return nil
+	}
 
 	opt.update()
 	return opt.ptr
