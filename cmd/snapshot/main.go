@@ -86,23 +86,20 @@ func parseTile(tileString string) {
 	var label = [...]string{"Z", "X", "Y"}
 
 	for i, part := range parts {
-		switch i {
-		case 0:
-			v, err = strconv.ParseUint(strings.TrimSpace(part), 10, 64)
-			FTile.Z = uint(v)
-
-		case 1:
-			v, err = strconv.ParseUint(strings.TrimSpace(part), 10, 64)
-			FTile.X = uint(v)
-		case 2:
-			v, err = strconv.ParseUint(strings.TrimSpace(part), 10, 64)
-			FTile.Y = uint(v)
-		}
+		v, err = strconv.ParseUint(strings.TrimSpace(part), 10, 64)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: invalid tile coordinates provided — %v\n", tileString)
 			fmt.Fprintf(os.Stderr, "Error: unabled to parse %v %v as a uint.\n", label[i], part)
 			usage()
 			os.Exit(2)
+		}
+		switch i {
+		case 0:
+			FTile.Z = uint(v)
+		case 1:
+			FTile.X = uint(v)
+		case 2:
+			FTile.Y = uint(v)
 		}
 	}
 }

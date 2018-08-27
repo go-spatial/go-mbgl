@@ -1,8 +1,6 @@
 package mbgl
 
 /*
-#cgo CXXFLAGS:-I${SRCDIR}/../mapbox-gl-native/include
-#cgo CXXFLAGS:-I${SRCDIR}/../mapbox-gl-native/platform/default
 #include "camera_options.h"
 */
 import "C"
