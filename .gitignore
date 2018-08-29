@@ -3,3 +3,5 @@
 mason_packages/
 .idea/
 .DS_Store
+mapbox-gl-native/
+mason-js/
