@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 
+# check mbgl dependencies
+function check_dep {
+    arg=$1
+    which  $arg #> /dev/null
+    if [[ ! $? -eq 0 ]]; then
+        echo "dep $arg, not installed"
+        exit
+    fi
+}
+
+deps="node cmake ccache xcpretty jazzy"
+for dep in $deps; do
+    echo "checking if $dep is installed"
+    check_dep $dep
+done
+
 if [[ ! $GOPATH ]]; then
     echo "GOPATH must be set"
     exit
