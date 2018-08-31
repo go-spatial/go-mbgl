@@ -12,6 +12,25 @@ import (
 	"strings"
 )
 
+func tfile(t *testing.T) *os.File {
+	fname := os.DevNull
+	evar := os.Getenv("MBGL_TEST_OUT_DIR")
+	if evar != "" {
+		fmt.Println("outputing to ",evar)
+		os.MkdirAll(evar, 0600)
+
+		fname = strings.Replace(t.Name(), "/", "-", -1)
+		fname = filepath.Join(evar,  fname + ".png")
+	}
+
+	f, err := os.OpenFile(fname, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0600)
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+
+	return f
+}
+
 func TestSnapshot(t *testing.T) {
 	type tcase struct {
 		src string
@@ -23,22 +42,10 @@ func TestSnapshot(t *testing.T) {
 	fn := func(tc tcase, t *testing.T) {
 		img := Snapshot(tc.src, tc.ext, tc.size, tc.ratio)
 
-		fname := os.DevNull
-		if evar := os.Getenv("MBGL_TEST_OUT_DIR"); evar != "" {
-			fmt.Println("outputing to ",evar)
-			os.MkdirAll(evar, 0600)
-
-			fname = strings.Replace(t.Name(), "/", "-", -1)
-			fname = filepath.Join(evar,  fname + ".png")
-		}
-
-		f, err := os.OpenFile(fname, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0600)
-		if err != nil {
-			t.Fatalf("unexpected error %v", err)
-		}
+		f := tfile(t)
 		defer f.Close()
 
-		err = png.Encode(f, img)
+		err := png.Encode(f, img)
 		if err != nil {
 			t.Fatalf("unexpected error %v", err)
 		}
@@ -103,6 +110,45 @@ func TestSnapshot(t *testing.T) {
 			src: "https://osm.tegola.io/maps/osm/style.json",
 			ext: exts["1"],
 			size: image.Pt(1, 1),
+		},
+	}
+
+	for k, v := range testcases {
+		t.Run(k, func(t *testing.T) {
+			fn(v, t)
+		})
+	}
+}
+
+func TestSnapshotTile(t *testing.T) {
+	type tcase struct {
+		src string
+		tile *slippy.Tile
+		size image.Point
+	}
+
+	fn := func (tc tcase, t *testing.T) {
+		s := NewSnapshotter(tc.src, 1.0)
+		img := SnapshotTile(s, *tc.tile, tc.size)
+
+		f := tfile(t)
+		defer f.Close()
+		err := png.Encode(f, img)
+		if err != nil {
+			t.Fatalf("unxepected error %v", err)
+		}
+	}
+
+	testcases := map[string]tcase{
+		"1": {
+			src: "https://osm.tegola.io/maps/osm/style.json",
+			tile: slippy.NewTile(5, 9, 12),
+			size: image.Pt(255, 255),
+		},
+		"2": {
+			src: "https://osm.tegola.io/maps/osm/style.json",
+			tile: slippy.NewTile(5, 9, 12),
+			size: image.Pt( 512, 512),
 		},
 	}
 
