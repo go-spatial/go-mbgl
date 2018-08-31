@@ -63,15 +63,18 @@ func parseBounds(boundString string) {
 		usage()
 		os.Exit(2)
 	}
-	for i, bound := range bounds {
-		FBounds[i], err = strconv.ParseFloat(strings.TrimSpace(bound), 64)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: invalid bounds provided — %v\n", boundString)
-			fmt.Fprintf(os.Stderr, "Error: unabled to parse %v(%v) as a float.\n", bound, i)
-			usage()
-			os.Exit(2)
-		}
+
+	y1, err := strconv.ParseFloat(strings.TrimSpace(bounds[0]), 64)
+	x1, err := strconv.ParseFloat(strings.TrimSpace(bounds[1]), 64)
+	y2, err := strconv.ParseFloat(strings.TrimSpace(bounds[2]), 64)
+	x2, err := strconv.ParseFloat(strings.TrimSpace(bounds[3]), 64)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: invalid bounds provided — %v\n", boundString)
+		//fmt.Fprintf(os.Stderr, "Error: unabled to parse %v(%v) as a float.\n", )
+		usage()
+		os.Exit(2)
 	}
+	FBounds = *geom.Hull([2]float64{x1, y1}, [2]float64{x2, y2})
 }
 
 func parseTile(tileString string) {
@@ -144,7 +147,6 @@ func ParseFlags() cmdType {
 	// Next should be the output filename.
 	FOutputFilename = strings.TrimSpace(flag.Arg(fileIdx))
 	return cmd
-
 }
 
 func main() {
@@ -162,6 +164,7 @@ func main() {
 		X: int(FWidth),
 		Y: int(FHeight),
 	}
+
 	switch cmd {
 	case CmdBounds:
 		img = ss.Snapshot(&FBounds, size)
