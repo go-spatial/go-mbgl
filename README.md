@@ -3,7 +3,8 @@ go bindings for mapbox gl native's c++ api
 
 ## Development
 
-### Darwin Deps
+### Dev Deps
+**Darwin**:
 see inssructions [on the mblg page](https://github.com/mapbox/mapbox-gl-native/blob/master/platform/macos/INSTALL.md), but do not build the library.
 In list form:
 * xcode
@@ -13,8 +14,11 @@ In list form:
 * xcpretty
 * jazzy
 
+**Linux**:
+todo
+
 ### install
-run the install script provided in the repo. Note, it'll install a node package, `mason-js` globaly with `npm i -g`.
+run the install script provided in the repo. Note, it'll install a node package, [`mason-js`](https://github.com/mapbox/mason-js) globally with `npm i -g`.
 ```bash
 ./install.sh
 ```
@@ -22,7 +26,7 @@ run the install script provided in the repo. Note, it'll install a node package,
 ### build/tests
 regular go tool commands (`go build`, `go test`) can be used for building the library.
 
-### Old install isntructions (depracated)
+### Old install instructions (deprecated)
 
 1. Download and build [Mapbox-GL-Native](https://github.com/mapbox/mapbox-gl-native) for your platform.
 
