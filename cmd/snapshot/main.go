@@ -172,7 +172,7 @@ func main() {
 	}
 	if err := png.Encode(file, img); err != nil {
 		file.Close()
-		log.Println("Failed to write %v", FOutputFilename)
+		log.Printf("Failed to write %v", FOutputFilename)
 		log.Fatal(err)
 	}
 	file.Close()
