@@ -5,3 +5,5 @@ mason_packages/
 .DS_Store
 mapbox-gl-native/
 mason-js/
+lib/
+cmd/snapshot/snapshot
