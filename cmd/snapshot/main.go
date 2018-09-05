@@ -63,17 +63,16 @@ func parseBounds(boundString string) {
 		usage()
 		os.Exit(2)
 	}
-
-	y1, err := strconv.ParseFloat(strings.TrimSpace(bounds[0]), 64)
-	x1, err := strconv.ParseFloat(strings.TrimSpace(bounds[1]), 64)
-	y2, err := strconv.ParseFloat(strings.TrimSpace(bounds[2]), 64)
-	x2, err := strconv.ParseFloat(strings.TrimSpace(bounds[3]), 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: invalid bounds provided — %v\n", boundString)
-		//fmt.Fprintf(os.Stderr, "Error: unabled to parse %v(%v) as a float.\n", )
-		usage()
-		os.Exit(2)
+	var fbounds [4]float64
+	for i := range bounds {
+		fbounds[i], err = strconv.ParseFloat(strings.TrimSpace(bounds[i]), 64)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: invalid bounds provided — %v\n", boundString)
+			usage()
+			os.Exit(2)
+		}
 	}
+	y1, x1, y2, x2 := fbounds[0], fbounds[1], fbounds[2], fbounds[3]
 	FBounds = *geom.Hull([2]float64{x1, y1}, [2]float64{x2, y2})
 }
 
