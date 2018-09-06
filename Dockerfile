@@ -1,68 +1,20 @@
-FROM ubuntu:latest
-CMD bash
+FROM golang:latest
 
-# Install the toolchain to build mapbox-gl-native
-RUN apt-get update && apt-get -y install \
-  apt-utils \
-  build-essential \
-  curl \
-  git \
-  tar \
-  wget \
-  zlib1g-dev \
-  automake \
-  libtool \
-  xutils-dev \
-  make \
-  pkg-config \
-  python-pip \
-  libcurl4-openssl-dev \
-  libpng-dev \
-  libsqlite3-dev \
-  cmake \
-  ninja-build \
-  clang \
-  nodejs \
-  npm \
-  libxi-dev \
-  libglu1-mesa-dev \
-  x11proto-randr-dev \
-  x11proto-xext-dev \
-  libxrandr-dev \
-  x11proto-xf86vidmode-dev \
-  libxxf86vm-dev \
-  libxcursor-dev \
-  libxinerama-dev \
-  xvfb
+RUN apt-get update
+RUN apt-get install -y curl git build-essential zlib1g-dev automake \
+                     libtool xutils-dev make cmake pkg-config python-pip \
+                     libcurl4-openssl-dev libpng-dev libsqlite3-dev \
+                     libllvm3.9
 
-# Clone and build mapbox-gl-native
-RUN mkdir -p /opt/src/github.com/mapbox
-RUN git -C /opt/src/github.com/mapbox clone https://github.com/mapbox/mapbox-gl-native.git
-RUN cd /opt/src/github.com/mapbox/mapbox-gl-native && \
-	BUILDTYPE=Release make linux-core
+RUN apt-get install -y cmake cmake-data
+RUN apt-get install -y ccache
 
-# Clone and build mason-js
-RUN npm cache clean -f
-RUN npm install -g n
-RUN n stable
-RUN git -C /opt/src/github.com/mapbox clone https://github.com/mapbox/mason-js.git
-WORKDIR /opt/src/github.com/mapbox/mason-js/
-RUN npm install && npm link
+RUN apt-get install -y libxi-dev libglu1-mesa-dev x11proto-randr-dev \
+                     x11proto-xext-dev libxrandr-dev \
+                     x11proto-xf86vidmode-dev libxxf86vm-dev \
+                     libxcursor-dev libxinerama-dev
 
-# Get the latest Go binary
-RUN curl -o /tmp/go.tar.gz https://storage.googleapis.com/golang/go1.10.1.linux-amd64.tar.gz
-RUN tar -xf /tmp/go.tar.gz -C /usr/local/bin
-ENV GOPATH=/opt/
-ENV PATH=$PATH:/usr/local/bin/go/bin
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
+RUN apt-get install -y nodejs
 
-ADD . /opt/src/github.com/go-spatial/go-mbgl
-WORKDIR /opt/src/github.com/go-spatial/go-mbgl
-
-RUN cp -r /opt/src/github.com/mapbox/mapbox-gl-native/mason_packages .
-RUN mason-js install
-RUN mason-js link
-
-RUN cp /opt/src/github.com/mapbox/mapbox-gl-native/build/linux-x86_64/Release/*.a /opt/src/github.com/go-spatial/go-mbgl/mason_packages/.link/lib/
-RUN cp -r /opt/src/github.com/mapbox/mapbox-gl-native/include/mbgl /opt/src/github.com/go-spatial/go-mbgl/mason_packages/.link/include/
-RUN cp -r /opt/src/github.com/mapbox/mapbox-gl-native/platform/default/mbgl /opt/src/github.com/go-spatial/go-mbgl/mason_packages/.link/include/
-RUN go build
+ENTRYPOINT bash
