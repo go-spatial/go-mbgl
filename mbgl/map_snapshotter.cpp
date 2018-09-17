@@ -33,6 +33,8 @@ MbglMapSnapshotter * mbgl_map_snapshotter_new(
     MbglLatLngBounds * region,
     const char * cacheDir) {
 
+    std::cout << "in new" << std::endl;
+
     auto _src = reinterpret_cast<FileSource *>(src);
     auto _sched = reinterpret_cast<Scheduler*>(sched);
     auto _style = std::make_pair((bool) false /*isFile*/, std::string(style));
@@ -40,12 +42,16 @@ MbglMapSnapshotter * mbgl_map_snapshotter_new(
     auto _camOpts = reinterpret_cast<CameraOptions*>(camOpts);
     auto _region = reinterpret_cast<LatLngBounds*>(region);
 
+    std::cout << "variables init" << std::endl;
+
     optional<std::string> _cacheDir;
     if (cacheDir != nullptr) {
         _cacheDir = std::string(cacheDir);
     }
 
-    auto ptr = new MapSnapshotter(
+    MapSnapshotter * ptr;
+    try {
+        ptr = new MapSnapshotter(
         _src,
         std::shared_ptr<Scheduler>(_sched),
         _style,
@@ -55,13 +61,27 @@ MbglMapSnapshotter * mbgl_map_snapshotter_new(
         make_optional(_region),
         _cacheDir);
 
+    } catch (std::runtime_error &e) {
+        std::cout << "err" << e.what() << std::endl;
+    }
+
+    std::cout << "returning" << std::endl;
+
     return reinterpret_cast<MbglMapSnapshotter*>(ptr);
 }
 
 void mbgl_map_snapshotter_destruct(MbglMapSnapshotter * self) {
     auto cast = reinterpret_cast<MapSnapshotter*>(self);
 
-    delete cast;
+    std::cout << "del" << std::endl;
+
+    try {
+        delete cast;
+    } catch (std::runtime_error &e) {
+        std::cout << "err" << e.what() << std::endl;
+    }
+    std::cout << "del-ed" << std::endl;
+
 }
 
 MbglPremultipliedImage * mbgl_map_snapshotter_snapshot(MbglMapSnapshotter * self) {
@@ -106,7 +126,7 @@ MbglPremultipliedImage * mbgl_map_snapshotter_snapshot(MbglMapSnapshotter * self
             std::rethrow_exception(err1);
         } catch (std::exception &e) {
             std::cout << "err" << e.what() << std::endl;
-            errStr = e.what();
+            errStr = std::string("snapshot: ") + std::string(e.what());
         }
     }
 
