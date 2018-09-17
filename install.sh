@@ -85,7 +85,7 @@ if [[ uname == "Darwin" ]]; then
     sudo mv $PKG_ROOT/lib/darwin/Mapbox.framework /Library/Frameworks/
 else
     git checkout master
-    git reset --hard --recurse-submodules
+    git submodule foreach --recursive git --reset --hard
     make linux-core
 
     if [[ -d $PKG_ROOT/lib/linux ]]; then
