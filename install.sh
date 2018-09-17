@@ -66,7 +66,7 @@ if [[ uname == "Darwin" ]]; then
     echo "installing for $(uname)"
 
     git checkout tags/macos-v0.9.0
-    git reset --hard --recurse-submodules
+    git submodule foreach --recursive git --reset --hard
 
     make xpackage
     err=$?
@@ -79,7 +79,7 @@ if [[ uname == "Darwin" ]]; then
         rm -rf $PKG_ROOT/lib/darwin
     fi
 
-    mkdir $PKG_ROOT/lib/darwin
+    mkdir -p $PKG_ROOT/lib/darwin
 
     mv $PKG_ROOT/mapbox-gl-native/build/macos/Debug/* $PKG_ROOT/lib/darwin/
     sudo mv $PKG_ROOT/lib/darwin/Mapbox.framework /Library/Frameworks/
@@ -92,7 +92,9 @@ else
         rm -rf $PKG_ROOT/lib/linux
     fi
 
-    mv $PKG_ROOT/mapbox-gl-native/build/Debug/*.a $PKG_ROOT/lib/linux
+    mkdir -p $PKG_ROOT/lib/linux
+
+    mv $PKG_ROOT/mapbox-gl-native/build/linux-x86_64/Debug/* $PKG_ROOT/lib/linux
 fi
 
 # install mason-js (mapbox package manager)
