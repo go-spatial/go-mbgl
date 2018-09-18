@@ -1,14 +1,15 @@
 package mbgl
 
 import (
-	"testing"
+	"fmt"
 	"image/png"
 	"os"
-	"fmt"
-	"github.com/go-spatial/geom/slippy"
 	"path/filepath"
 	"strings"
+	"testing"
+
 	"github.com/arolek/p"
+	"github.com/go-spatial/geom/slippy"
 )
 
 func TestNewMapSnapshotter(t *testing.T) {
@@ -68,14 +69,14 @@ func TestSnapshotterSnapshot(t *testing.T) {
 
 		fname := os.DevNull
 		if evar := os.Getenv("MBGL_TEST_OUT_DIR"); evar != "" {
-			fmt.Println("outputing to ",evar)
+			fmt.Println("outputing to ", evar)
 			os.MkdirAll(evar, 0600)
 
 			fname = strings.Replace(t.Name(), "/", "-", -1)
-			fname = filepath.Join(evar,  fname + ".png")
+			fname = filepath.Join(evar, fname+".png")
 		}
 
-		f, err := os.OpenFile(fname, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0600)
+		f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			t.Fatalf("unexpected error %v", err)
 		}
@@ -118,7 +119,7 @@ func TestSnapshotterSetCamOpts(t *testing.T) {
 		opts []CameraOptions
 	}
 
-	fn := func (tc tcase, t *testing.T) {
+	fn := func(tc tcase, t *testing.T) {
 		tpool := NewThreadPool(4)
 		SchedulerSetCurrent(tpool)
 
@@ -142,12 +143,12 @@ func TestSnapshotterSetCamOpts(t *testing.T) {
 		}
 	}
 
-	testcases := map[string]tcase {
+	testcases := map[string]tcase{
 		"1": {
 			opts: []CameraOptions{
 				{},
 				{
-					Center: NewLatLng(33, 117),
+					Center:  NewLatLng(33, 117),
 					Padding: NewEdgeInsets(10, 10, 10, 10),
 				},
 			},
@@ -155,24 +156,23 @@ func TestSnapshotterSetCamOpts(t *testing.T) {
 	}
 
 	for k, v := range testcases {
-		t.Run(k, func (t *testing.T) {
+		t.Run(k, func(t *testing.T) {
 			fn(v, t)
 		})
 	}
 }
-
 
 func TestSnapshotterSetRegion(t *testing.T) {
 	type tcase struct {
 		bounds []*LatLngBounds
 	}
 
-	fn := func(tc tcase, t * testing.T) {
+	fn := func(tc tcase, t *testing.T) {
 		tpool := NewThreadPool(4)
 		SchedulerSetCurrent(tpool)
 
 		ms := NewMapSnapshotter(
-			NewDefaultFileSource("","", p.Uint64(0)),
+			NewDefaultFileSource("", "", p.Uint64(0)),
 			tpool,
 			"https://osm.tegola.io/maps/osm/style.json",
 			Size{Height: 100, Width: 100},
@@ -184,22 +184,21 @@ func TestSnapshotterSetRegion(t *testing.T) {
 
 		ms.Snapshot()
 
-
 		for _, v := range tc.bounds[1:] {
 			ms.SetRegion(v)
 			ms.Snapshot()
 		}
 	}
 
-	testcases := map[string]tcase {
-		"1" : {
-			bounds: []*LatLngBounds {
+	testcases := map[string]tcase{
+		"1": {
+			bounds: []*LatLngBounds{
 				NewLatLngBoundsFromTile(slippy.NewTile(0, 0, 0)),
 				NewLatLngBoundsFromTile(slippy.NewTile(12, 212, 6079)),
 			},
 		},
 		"2": {
-			bounds: []*LatLngBounds {
+			bounds: []*LatLngBounds{
 				nil,
 				NewLatLngBounds(NewLatLng(33, 117), NewLatLng(34, 118)),
 			},
