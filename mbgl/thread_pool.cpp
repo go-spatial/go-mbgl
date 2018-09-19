@@ -19,5 +19,6 @@ MbglThreadPool * mbgl_thread_pool_new(int threads) {
 void mbgl_thread_pool_destruct(MbglThreadPool * self) {
     auto cast = reinterpret_cast<ThreadPool*>(self);
     std::cout << "old ptr " << self << std::endl;
+    // TODO: GDEY/EAR7H need to fix this.
     //delete cast;
 }
