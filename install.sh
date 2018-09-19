@@ -62,11 +62,11 @@ fi
 
 cd $PKG_ROOT/mapbox-gl-native
 
-if [[ uname == "Darwin" ]]; then
+if [[ $unamestr == "Darwin" ]]; then
     echo "installing for $(uname)"
 
     git checkout tags/macos-v0.9.0
-    git submodule foreach --recursive git --reset --hard
+    git submodule foreach --recursive git reset --hard
 
     make xpackage
     err=$?
@@ -85,8 +85,8 @@ if [[ uname == "Darwin" ]]; then
     sudo mv $PKG_ROOT/lib/darwin/Mapbox.framework /Library/Frameworks/
 else
     git checkout master
-    git submodule foreach --recursive git --reset --hard
-    make linux-core
+    git submodule foreach --recursive git reset --hard
+    make WITH_EGL=ON linux-core
 
     if [[ -d $PKG_ROOT/lib/linux ]]; then
         rm -rf $PKG_ROOT/lib/linux
@@ -100,10 +100,10 @@ fi
 # install mason-js (mapbox package manager)
 cd $PKG_ROOT
 git clone https://github.com/mapbox/mason-js
-cd $PKG_ROOT/mason-js
-npm i -g
+MASON_JS="node $PKG_ROOT/mason-js/bin/mason-js"
+
 
 # install deps
 cd $PKG_ROOT
-mason-js install
-mason-js link
+$MASON_JS install
+$MASON_JS link

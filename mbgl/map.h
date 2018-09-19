@@ -6,6 +6,8 @@
 #include "size.h"
 #include "scheduler.h"
 #include "renderer_frontend.h"
+#include "camera_options.h"
+
 
 typedef struct{} MbglMap;
 
@@ -20,6 +22,10 @@ MbglMap * mbgl_map_new(MbglRendererFrontend * frontend,
 	MbglScheduler * sched);
 
 void mbgl_map_destruct(MbglMap * self);
+
+void mbgl_map_jump_to(MbglMap * self, MbglCameraOptions * opts);
+
+void mbgl_map_set_style_url(MbglMap * self, const char * addr);
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,4 @@
+#include <mbgl/style/style.hpp>
 #include <mbgl/map/map.hpp>
 #include <mbgl/storage/file_source.hpp>
 #include <mbgl/actor/scheduler.hpp>
@@ -26,6 +27,21 @@ MbglMap * mbgl_map_new (MbglRendererFrontend * frontend,
 }
 
 void mbgl_map_destruct(MbglMap * self) {
-	auto _map = reinterpret_cast<Map *>(self);
-	delete _map;
+	auto _self = reinterpret_cast<Map *>(self);
+	delete _self;
+}
+
+void mbgl_map_jump_to(MbglMap * self, MbglCameraOptions * opts) {
+	auto _self = reinterpret_cast<Map *>(self);
+	auto _opts = reinterpret_cast<CameraOptions *>(opts);
+
+	_self->jumpTo(*_opts);
+}
+
+
+void mbgl_map_set_style_url(MbglMap * self, const char * addr) {
+	auto _self = reinterpret_cast<Map *>(self);
+	auto _addr = std::string(addr);
+
+	_self->getStyle().loadURL(_addr);
 }

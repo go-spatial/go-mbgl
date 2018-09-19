@@ -26,3 +26,15 @@ func NewMap(frontend RendererFrontend,
 func (m *Map) Destruct() {
 	C.mbgl_map_destruct((*C.MbglMap)(m))
 }
+
+func (m *Map) jumpTo(opts *CameraOptions) {
+	C.mbgl_map_jump_to(
+		(*C.MbglMap)(m),
+		opts.cPtr())
+}
+
+func (m *Map) setStyleUrl(str string) {
+	C.mbgl_map_set_style_url(
+		(*C.MbglMap)(m),
+		C.CString(str))
+}

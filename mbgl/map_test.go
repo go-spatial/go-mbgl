@@ -1,6 +1,10 @@
 package mbgl
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/arolek/p"
+)
 
 func TestMap(t *testing.T) {
 	type tcase struct {
@@ -11,13 +15,16 @@ func TestMap(t *testing.T) {
 	}
 
 	fn := func(tc tcase, t *testing.T) {
-		front := NewHeadlessFrontend(tc.size,
+		loop := NewRunLoop()
+		defer loop.Destruct()
+
+		front := NewHeadlessFrontend(&tc.size,
 			tc.pixelRatio,
 			tc.src,
 			tc.sched,
 			nil, nil)
 
-		NewMap(tc.front,
+		NewMap(front,
 			tc.size,
 			tc.pixelRatio,
 			tc.src,
@@ -32,9 +39,9 @@ func TestMap(t *testing.T) {
 
 	testcases := map[string]tcase{
 		"1": {
-			size:       Size{256, 256},
+			size:       Size{Height: 256, Width: 256},
 			pixelRatio: 1.0,
-			src:        NewDefaultFileSource("", "https://osm.tegola.io/maps/osm/style.json", 0),
+			src:        NewDefaultFileSource("", "https://osm.tegola.io/maps/osm/style.json", p.Uint64(0)),
 			sched:      NewThreadPool(4),
 		},
 	}

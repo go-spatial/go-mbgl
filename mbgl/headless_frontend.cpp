@@ -56,7 +56,9 @@ MbglPremultipliedImage * mbgl_headless_frontend_render(
 	auto _self = reinterpret_cast<HeadlessFrontend *>(self);
 	auto _map = reinterpret_cast<Map *>(map);
 
+	std::cout << "calling self->render" << std::endl;
 	auto img = _self->render(*_map);
+	std::cout << "self rendered" << std::endl;
 	auto img2 = new PremultipliedImage();
 	*img2 = std::move(img);
 
