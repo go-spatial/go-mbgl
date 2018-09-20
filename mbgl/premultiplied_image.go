@@ -1,7 +1,7 @@
 package mbgl
 
 /*
-#include "map_snapshotter.h"
+#include "premultiplied_image.h"
 */
 import "C"
 import (

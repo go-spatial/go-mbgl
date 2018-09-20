@@ -7,7 +7,6 @@ package mbgl
 #cgo CXXFLAGS: -g
 #cgo CXXFLAGS: -I${SRCDIR}/c/include
 #cgo CXXFLAGS: -I${SRCDIR}/c/mapbox-gl-native/platform/default
-#cgo CXXFLAGS: -I${SRCDIR}/c/mapbox-gl-native/include
 
 #cgo LDFLAGS: -lmbgl-filesource 
 #cgo LDFLAGS: -lmbgl-core
@@ -24,3 +23,4 @@ import "C"
 // @cgo LDFLAGS: -L${SRCDIR}/../mason_packages/.link/lib
 // @cgo LDFLAGS: -lsqlite3 -lz
 // @cgo LDFLAGS: -lmbgl-filesource -lmbgl-core
+// #cgo CXXFLAGS: -I${SRCDIR}/c/mapbox-gl-native/include

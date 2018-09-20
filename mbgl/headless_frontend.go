@@ -5,14 +5,14 @@ package mbgl
 */
 import "C"
 
+import (
+	"fmt"
+	"os"
+)
+
 type HeadlessFrontend C.MbglHeadlessFrontend
 
-func NewHeadlessFrontend(size *Size,
-	pixelRatio float32,
-	src FileSource,
-	sched Scheduler,
-	cacheDir *string,
-	fontFamily *string) *HeadlessFrontend {
+func NewHeadlessFrontend(size *Size, pixelRatio float32, src FileSource, sched Scheduler, cacheDir *string, fontFamily *string) *HeadlessFrontend {
 
 	var _cacheDir *C.char
 	if cacheDir != nil {
@@ -23,6 +23,7 @@ func NewHeadlessFrontend(size *Size,
 	if fontFamily != nil {
 		_fontFamily = C.CString(*fontFamily)
 	}
+	fmt.Fprintf(os.Stderr, "Starting to startup mbgl_headless_frontend_new\n")
 
 	ptr := C.mbgl_headless_frontend_new(
 		size.cSize(),
@@ -31,6 +32,7 @@ func NewHeadlessFrontend(size *Size,
 		sched.scheduler(),
 		_cacheDir,
 		_fontFamily)
+	fmt.Fprintf(os.Stderr, "After call to mbgl_headless_frontend_new")
 
 	return (*HeadlessFrontend)(ptr)
 }
@@ -40,9 +42,11 @@ func (hfe *HeadlessFrontend) rendererFrontend() *C.MbglRendererFrontend {
 }
 
 func (hfe *HeadlessFrontend) Render(m *Map) *PremultipliedImage {
+	fmt.Fprintf(os.Stderr, "Before the Render")
 	ptr := C.mbgl_headless_frontend_render(
 		(*C.MbglHeadlessFrontend)(hfe),
 		(*C.MbglMap)(m))
+	fmt.Fprintf(os.Stderr, "After the Render")
 
 	return (*PremultipliedImage)(ptr)
 }

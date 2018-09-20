@@ -3,7 +3,7 @@
 
 
 #include "file_source.h"
-#include "map_snapshotter.h"
+#include "premultiplied_image.h"
 #include "size.h"
 #include "scheduler.h"
 #include "map.h"

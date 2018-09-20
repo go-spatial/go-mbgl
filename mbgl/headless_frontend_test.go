@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 	"testing"
+	"os"
 
 	"github.com/arolek/p"
 )
@@ -17,23 +18,34 @@ func TestNewHeadlessFrontend(t *testing.T) {
 
 	fn := func(tc tcase, t *testing.T) {
 		runtime.LockOSThread()
-		defer runtime.UnlockOSThread()
-
+		fmt.Fprintf(os.Stderr,"Starting new run loop\n")
 		loop := NewRunLoop()
-		defer loop.Destruct()
-
+		fmt.Fprintf(os.Stderr,"Setting up new thread pool 4\n")
 		tpool := NewThreadPool(4)
-		defer tpool.Destruct()
 
-		NewHeadlessFrontend(&tc.size,
-			tc.pixelRatio,
-			tc.src,
-			tpool,
-			nil, nil).
-			Destruct()
 
+		fmt.Fprintf(os.Stderr,"Setting new Headless frontend\n")
+		frontend := NewHeadlessFrontend(&tc.size, tc.pixelRatio, tc.src, tpool, nil, nil)
+
+		fmt.Fprintf(os.Stderr,"Setting new Headless frontend: %p\n",frontend)
+
+		fmt.Fprintf(os.Stderr,"Destroying new Headless frontend\n")
+
+		frontend.Destruct()
+
+		fmt.Fprintf(os.Stderr,"Destroy the testcase size.\n")
 		tc.size.Destruct()
+		fmt.Fprintf(os.Stderr,"Destroy the testcase source.\n")
 		tc.src.Destruct()
+
+		fmt.Fprintf(os.Stderr,"Destroy the pool\n")
+		tpool.Destruct()
+
+		fmt.Fprintf(os.Stderr,"Destroy the loop\n")
+		loop.Destruct()
+
+		fmt.Fprintf(os.Stderr,"Unlock the thread\n")
+		runtime.UnlockOSThread()
 	}
 
 	testcases := map[string]tcase{
