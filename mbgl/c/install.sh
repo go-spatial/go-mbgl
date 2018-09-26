@@ -80,10 +80,14 @@ PKG_ROOT=$GOPATH/src/github.com/go-spatial/go-mbgl/mbgl/c
 
 # download and install sdk
 if [[ ! -d mapbox-gl-native ]]; then
-    git clone https://github.com/mapbox/mapbox-gl-native
-fi
+    git clone --depth=1 --recursive https://github.com/mapbox/mapbox-gl-native
+	 pushd mapbox-gl-native
+	 git config user.email "gautam.dey77@gmail.com"
+	 git config user.name "Gautam Dey"
+	 git am ../patches/*
+	 popd
 
-git fetch --all --tags --prune
+fi
 
 if [[ ! -d $PKG_ROOT/lib ]]; then
     mkdir $PKG_ROOT/lib
@@ -116,8 +120,10 @@ if [[ uname == "Darwin" ]]; then
 else
     LIBDIR=$PKG_ROOT/lib/linux
     INCLUDEDIR=$PKG_ROOT/include
-    git checkout master
-    git reset --hard --recurse-submodules
+
+    #git checkout master
+    #git reset --hard --recurse-submodules
+	 
     make WITH_OSMESA=ON linux-core
 
     if [[ -d ${LIBDIR} ]]; then

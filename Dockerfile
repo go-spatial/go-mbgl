@@ -33,6 +33,8 @@ RUN apt-get install -y libxi-dev libglu1-mesa-dev x11proto-randr-dev \
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get install -y nodejs
 
+RUN apt-get install -y libosmesa6-dev libsqlite3-dev
+
 # Tools for Development
 RUN apt-get install -y vim tree
 
