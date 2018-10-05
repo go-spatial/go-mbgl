@@ -1,4 +1,4 @@
-#!/usr/bin/env bash 
+#!/bin/bash -x
 
 
 # copy includes will use find and xargs to copy includes from the mason_packages/headers folder
@@ -11,6 +11,22 @@ function copy_includes {
 	  srcdir="${PKG_ROOT}/mapbox-gl-native/${subdir}/${libName}"
 	  echo "copying includes for ${PKG_ROOT}/mapbox-gl-native/${subdir}/${libraryName}"
  	  find "${PKG_ROOT}/mapbox-gl-native/${subdir}/${libraryName}" -iname include | xargs -n 1 -I{} cp -R {}/ ${PKG_ROOT}/
+	done	
+}
+
+function copy_hpps {
+	subdir=$1
+	shift
+	echo "remainder $@"
+	for dir in $@; do
+	  srcdir="${PKG_ROOT}/mapbox-gl-native/${subdir}/${dir}"
+	  for file in $(find ${srcdir} -type f -name '*.hpp'); do
+		destfile=${file#$srcdir}
+		bdir=$(dirname ${destfile})
+		echo copying $(basename $file) " to ${INCLUDEDIR}/$destfile"
+		mkdir -p ${INCLUDEDIR}/${bdir}
+		cp $file ${INCLUDEDIR}/${destfile}
+	   done
 	done	
 }
 
@@ -46,6 +62,7 @@ function check_dep {
     fi
 }
 
+function no_call1 {
 if [[ $unamestr == "Darwin" ]]; then
     deps="node cmake ccache xcpretty jazzy"
     for dep in $deps; do
@@ -69,6 +86,7 @@ else
         check_dep $dep
     done
 fi
+}
 
 if [[ ! $GOPATH ]]; then
     echo "GOPATH must be set"
@@ -136,8 +154,12 @@ else
 
     copy_libs "build" "Debug"
     copy_libs "mason_packages" "libuv" "libjpeg-turbo" "libpng"
+
     #cp $PKG_ROOT/mapbox-gl-native/build/linux-x86_64/Debug/*.a ${LIBDIR}
     cp -R $PKG_ROOT/mapbox-gl-native/include/* ${INCLUDEDIR}
+
+    copy_hpps "platform" "default"
+    
     copy_includes "vendor" "expected"
     copy_includes "mason_packages/headers" "geometry" "variant"
 fi

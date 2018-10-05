@@ -26,7 +26,6 @@ func (im *PremultipliedImage) Image() image.Image {
 		width:  int(raw.width),
 		height: int(raw.height),
 	}
-
 }
 
 func (im *PremultipliedImage) Destruct() {
