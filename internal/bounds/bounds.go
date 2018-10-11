@@ -141,16 +141,13 @@ func Zoom(bounds *geom.Extent, width, height float64) float64 {
 	return math.Floor(math.Log(scale) / math.Ln2)
 }
 
-func CenterZoom(bounds *geom.Extent, width, height float64) ([2]float64, float64) {
+func Center(bounds *geom.Extent) [2]float64 {
 	// assume ESPG3857 for now.
 	prj := ESPG3857
 	if bounds == nil {
 		// we want the whole world.
 		bounds = prj.Bounds()
 	}
-
-	// calculate our zoom
-	zoom := Zoom(bounds, width, height)
 
 	// for lat lng geom.Extent should be laid out as follows:
 	// {west, south, east, north}
@@ -166,7 +163,15 @@ func CenterZoom(bounds *geom.Extent, width, height float64) ([2]float64, float64
 	centerPtY := (swPt[1] + nePt[1]) / 2
 
 	// 256 is the tile size.
-	center := prj.Unproject(prj.Untransform([2]float64{centerPtX, centerPtY}, 256))
+	return prj.Unproject(prj.Untransform([2]float64{centerPtX, centerPtY}, 256))
+}
 
-	return center, zoom
+func CenterZoom(bounds *geom.Extent, width, height float64) ([2]float64, float64) {
+	// assume ESPG3857 for now.
+	prj := ESPG3857
+	if bounds == nil {
+		// we want the whole world.
+		bounds = prj.Bounds()
+	}
+	return Center(bounds), Zoom(bounds, width, height)
 }

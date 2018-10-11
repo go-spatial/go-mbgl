@@ -13,7 +13,6 @@
 
 snapshot_Result Snapshot(snapshot_Params params) {
 
-    mbgl::util::RunLoop loop;
     snapshot_Result result; 
 
     result.DidError = 0;
@@ -23,11 +22,10 @@ snapshot_Result Snapshot(snapshot_Params params) {
     mbgl::ThreadPool threadPool(4);
 
     mbgl::DefaultFileSource fileSource(params.cache_file, params.asset_root);
-    mbgl::HeadlessFrontend frontend({ params.height, params.width }, float(params.ppi_ratio), fileSource, threadPool);
+    mbgl::HeadlessFrontend frontend({ params.width, params.height }, float(params.ppi_ratio), fileSource, threadPool);
 
     mbgl::Map map(frontend, mbgl::MapObserver::nullObserver(), frontend.getSize(), params.ppi_ratio, fileSource, threadPool, mbgl::MapMode::Static);
 
-    //map.getStyle().loadURL("file://style.json");
     map.getStyle().loadURL(params.style);
     map.setLatLngZoom({ params.lat, params.lng }, params.zoom);
     map.setBearing(params.bearing);

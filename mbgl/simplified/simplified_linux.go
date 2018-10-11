@@ -20,6 +20,7 @@ package simplified
 #cgo LDFLAGS: ${SRCDIR}/../c/lib/linux/libuv.a
 #cgo LDFLAGS: -lrt -lpthread
 #cgo LDFLAGS: -lnsl -ldl
+#cgo LDFLAGS: -static-libstdc++
 
 */
 import "C"

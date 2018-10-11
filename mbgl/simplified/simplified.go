@@ -7,4 +7,19 @@ package simplified
 #cgo CXXFLAGS: -g
 */
 import "C"
+import "github.com/go-spatial/go-mbgl/mbgl"
 
+var RunLoop *mbgl.RunLoop
+
+func NewRunLoop() {
+	if RunLoop == nil {
+		RunLoop = mbgl.NewRunLoop()
+	}
+}
+
+func DestroyRunLoop() {
+	if RunLoop != nil {
+		RunLoop.Destruct()
+		RunLoop = nil
+	}
+}

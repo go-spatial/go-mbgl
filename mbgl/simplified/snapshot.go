@@ -1,10 +1,13 @@
 package simplified
 
 import (
+	"context"
 	"errors"
 	"log"
 	"runtime"
 	"strings"
+	"sync"
+	"time"
 	"unsafe"
 )
 
@@ -13,7 +16,7 @@ import (
 #include "snapshot.h"
 
 
-snapshot_Params NewSnapshotParams( char* style, char* cacheFile, char* assetRoot, uint32_t width, uint32_t height, int ppi_ratio, double lat, double lng, double zoom, double pitch, double bearing) {
+snapshot_Params NewSnapshotParams( char* style, char* cacheFile, char* assetRoot, uint32_t width, uint32_t height, double ppi_ratio, double lat, double lng, double zoom, double pitch, double bearing) {
 
 	snapshot_Params params;
 	params.style      = style;
@@ -31,6 +34,8 @@ snapshot_Params NewSnapshotParams( char* style, char* cacheFile, char* assetRoot
 }
 */
 import "C"
+
+var ErrManagerExiting = errors.New("Manager shutting down.")
 
 type Snapshotter struct {
 	Style     string
@@ -71,7 +76,7 @@ func (snap Snapshotter) AsParams() (p C.snapshot_Params, err error) {
 	if zoom <= 0 {
 		zoom = 0
 	}
-	ppiratio = snap.PPIRatio
+	ppiratio := snap.PPIRatio
 	if ppiratio == 0.0 {
 		ppiratio = 1.0
 	}
@@ -91,10 +96,7 @@ func (snap Snapshotter) AsParams() (p C.snapshot_Params, err error) {
 	return img, nil
 }
 
-func Snapshot(snap Snapshotter) (img Image, err error) {
-
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
+func snapshot(snap Snapshotter) (img Image, err error) {
 
 	_params, err := snap.AsParams()
 	if err != nil {
@@ -109,8 +111,106 @@ func Snapshot(snap Snapshotter) (img Image, err error) {
 
 	img.Width, img.Height = int(result.Image.Width), int(result.Image.Height)
 	bytes := img.Width * img.Height * 4
-	log.Printf("Width %v : Height %v : Bytes %v", img.Width, img.Height, bytes)
 	img.Data = C.GoBytes(unsafe.Pointer(result.Image.Data), C.int(bytes))
 
 	return img, nil
+}
+
+type snapJobReply struct {
+	image Image
+	err   error
+}
+
+type snapJob struct {
+	Params Snapshotter
+	Reply  chan<- snapJobReply
+}
+
+func snapshotWorker(job snapJob) {
+	img, err := snapshot(job.Params)
+	job.Reply <- snapJobReply{
+		image: img,
+		err:   err,
+	}
+}
+
+var rwManagerRunning sync.RWMutex
+var isManagerRunning bool
+var workQueue chan snapJob
+
+func IsManagerRunning() (b bool) {
+	rwManagerRunning.RLock()
+	defer rwManagerRunning.RUnlock()
+	return isManagerRunning
+}
+
+// StartSnapshotManager will block till the Manager has started.
+func StartSnapshotManager(ctx context.Context) {
+	go SnapshotManager(ctx)
+	for {
+		<-time.After(10 * time.Millisecond)
+		if IsManagerRunning() {
+			return
+		}
+	}
+}
+
+func SnapshotManager(ctx context.Context) {
+	if IsManagerRunning() {
+		return
+	}
+
+	log.Println("Starting up manager.")
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	NewRunLoop()
+	defer DestroyRunLoop()
+	workQueue = make(chan snapJob)
+
+	rwManagerRunning.Lock()
+	isManagerRunning = true
+	rwManagerRunning.Unlock()
+	defer func() {
+		rwManagerRunning.Lock()
+		isManagerRunning = false
+		rwManagerRunning.Unlock()
+	}()
+
+	for {
+		select {
+		case job := <-workQueue:
+			snapshotWorker(job)
+		case <-ctx.Done():
+			// We are exiting...
+			rwManagerRunning.Lock()
+			isManagerRunning = false
+			rwManagerRunning.Unlock()
+			break
+		}
+	}
+	for j := range workQueue {
+		// We are shutdowning, let's empty the queue.
+		j.Reply <- snapJobReply{
+			err: ErrManagerExiting,
+		}
+	}
+}
+
+func Snapshot1(snap Snapshotter) (img Image, err error) {
+	if !IsManagerRunning() {
+		if workQueue != nil {
+			close(workQueue)
+		}
+		return img, ErrManagerExiting
+	}
+	var reply = make(chan snapJobReply)
+
+	workQueue <- snapJob{
+		Params: snap,
+		Reply:  reply,
+	}
+
+	r := <-reply
+	close(reply)
+	return r.image, r.err
 }
