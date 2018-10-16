@@ -1,5 +1,5 @@
-# Raster
-Raster is a raster tile server that takes a mapbox style files and generates raster tiles for it.
+# Snap
+Snap is a raster tile server that takes a mapbox style files and generates raster tiles for it.
 
 
 # URLs that are supported by the application.
@@ -45,5 +45,24 @@ If the server is up this url will return a 200.
 /health
 ```
 
+To run `snap` you can use the following subcomamnds
+
+* serve to run the raster tile server
+* generate to generate an image 
+
+# How to build.
+
+Currently snap only supports ubuntu linux.
+
+`go build` in the snap directory will build you a new binary using OSMesa. 
+
+# Library dependencies:
+
+please make sure to install `libosmesa6` library.
+
+# The system uses prebuilt libraries
+
+These libraries are stored in the `mbgl/mbgl/c/lib/linux` directory. To rebuild build
+these libraries use the install.sh script in the `mbgl/mbgl/c/` directory.
 
 
