@@ -2,8 +2,9 @@
 
 go-mbgl aims to provide Go bindings for [Mapbox GL native's C++ API.](https://github.com/mapbox/mapbox-gl-native)
 
-*WARNING*: This project is under heavly development, and is not production ready.
-*WARNING*: This will only work on Linux
+**WARNING**: This project is under heavly development, and is not production ready. 
+
+**WARNING**: This will only work on Linux
 
 This repository depends on [*git-lfs*](https://git-lfs.github.com/)
 
