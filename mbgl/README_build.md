@@ -1,4 +1,4 @@
-# Mbgl
+# go-mbgl
 go bindings for mapbox gl native's c++ api
 
 ## Development

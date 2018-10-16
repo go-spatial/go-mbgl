@@ -1,5 +1,5 @@
 # Snap
-Snap is a raster tile server that takes a mapbox style files and generates raster tiles for it.
+Snap aims to be a headless raster tile, and static map server. Currenly using OSMesa 6, with CPU only rendering.
 
 
 # URLs that are supported by the application.
@@ -35,7 +35,7 @@ the only thing that is supported.)
 * zoom      [required] : the x coordinate (column) in the slippy tile scheme.
 * bearing   [required] : the y coordinate (row) in the slippy tile scheme.
 * @2x            [optional] : to serve hight definition (retina) tiles. Omit to serve standard definition tiles.
-* file-extension [optional] : the file type to encode the raster image in. Currently supported formats png, jpg. Default is jpg.
+* file-extension [optional] : the file type to encode the raster image in. Currently supported formats are png, jpg. Default is jpg.
 
 ## Health check
 
@@ -52,15 +52,16 @@ To run `snap` you can use the following subcomamnds
 
 # How to build.
 
-Currently snap only supports ubuntu linux.
+Currently snap only supports Linux, and has only been tested on Ubuntu 18.04.
 
 `go build` in the snap directory will build you a new binary using OSMesa. 
 
-# Library dependencies:
+## Library dependencies:
 
-please make sure to install `libosmesa6` library.
+This utility depends on `libosmesa6` library.
+For Ubuntu 18.04 it can be installed with the following command: `apt-get install libosmesa6`
 
-# The system uses prebuilt libraries
+## The utility uses prebuilt libraries
 
 These libraries are stored in the `mbgl/mbgl/c/lib/linux` directory. To rebuild build
 these libraries use the install.sh script in the `mbgl/mbgl/c/` directory.
