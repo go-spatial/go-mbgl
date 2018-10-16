@@ -2,11 +2,11 @@
 Snap aims to be a headless raster tile, and static map server. Currenly using OSMesa 6, with CPU only rendering.
 
 
-# URLs that are supported by the application.
+## URLs that are supported by the application.
 
 
 
-## Raster Tile Server API
+### Raster Tile Server API
 
 ```
 /styles/${style-name:string}/tiles/[${tilesize:int}/]${z:int}/${x:int}/${y:int}[@2x][.${file-extention:enum(jpg,png)}]
@@ -21,7 +21,8 @@ the only thing that is supported.)
 * @2x            [optional] : to serve hight definition (retina) tiles. Omit to serve standard definition tiles.
 * file-extension [optional] : the file type to encode the raster image in. Currently supported formats png, jpg. Default is jpg.
 
-## Static map server
+### Static map server
+
 For generating an image of a map at a given point and zoom use the following url.
 
 ```
@@ -37,7 +38,7 @@ the only thing that is supported.)
 * @2x            [optional] : to serve hight definition (retina) tiles. Omit to serve standard definition tiles.
 * file-extension [optional] : the file type to encode the raster image in. Currently supported formats are png, jpg. Default is jpg.
 
-## Health check
+### Health check
 
 If the server is up this url will return a 200.
 
@@ -50,18 +51,18 @@ To run `snap` you can use the following subcomamnds
 * serve to run the raster tile server
 * generate to generate an image 
 
-# How to build.
+## How to build.
 
 Currently snap only supports Linux, and has only been tested on Ubuntu 18.04.
 
 `go build` in the snap directory will build you a new binary using OSMesa. 
 
-## Library dependencies:
+### Library dependencies:
 
 This utility depends on `libosmesa6` library.
 For Ubuntu 18.04 it can be installed with the following command: `apt-get install libosmesa6`
 
-## The utility uses prebuilt libraries
+### The utility uses prebuilt libraries
 
 These libraries are stored in the `mbgl/mbgl/c/lib/linux` directory. To rebuild build
 these libraries use the install.sh script in the `mbgl/mbgl/c/` directory.
