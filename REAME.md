@@ -5,5 +5,6 @@ provides one function.
 
 Please, look at the snap command to see how to use this function.
 
+This project uses [git-lfs](https://git-lfs.github.com/); please make sure to have it installed and configured.
 
 
