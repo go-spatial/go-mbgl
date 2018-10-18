@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"github.com/dimfeld/httptreemux"
 	"github.com/disintegration/imaging"
 	"github.com/go-spatial/geom/slippy"
+	"github.com/go-spatial/geom/spherical"
 
 	"github.com/go-spatial/go-mbgl/internal/bounds"
 	mbgl "github.com/go-spatial/go-mbgl/mbgl/simplified"
@@ -87,6 +89,7 @@ func newRouter() *httptreemux.TreeMux {
 	group.GET("/:style-name/tiles/:tilesize/:z/:x/:ypath", serverHandlerTileSize)
 	group.GET("/:style-name/tiles/:z/:x/:ypath", serverHandlerTile)
 	group.GET("/:style-name/static/:lonlatzoompath/:widthheightpath", serverHandlerStatic)
+	group.GET("/:style-name/static/bbox/:boundszoompath/:widthheightpath", serverHandlerStaticBounds)
 
 	return r
 }
@@ -298,15 +301,8 @@ func generateZoomCenterImage(w io.Writer, style string, width, height int, ppi, 
 	return generateImage(w, snpsht, int(_width), int(_height), ext)
 }
 
-func generateImage(w io.Writer, param mbgl.Snapshotter, width, height int, ext string) (string, error) {
+func writeImage(w io.Writer, img image.Image, width, height int, ext string) (string, error) {
 	imageType := "unknown"
-	param.Zoom -= 1
-
-	img, err := mbgl.Snapshot1(param)
-	if err != nil {
-		return imageType, err
-	}
-
 	cimg := imaging.CropCenter(img, width, height)
 
 	switch ext {
@@ -322,6 +318,18 @@ func generateImage(w io.Writer, param mbgl.Snapshotter, width, height int, ext s
 		}
 	}
 	return imageType, nil
+}
+
+func generateImage(w io.Writer, param mbgl.Snapshotter, width, height int, ext string) (string, error) {
+
+	param.Zoom -= 1
+
+	img, err := mbgl.Snapshot1(param)
+	if err != nil {
+		return "", err
+	}
+
+	return writeImage(w, img, width, height, ext)
 }
 
 func serverHandlerTile(w http.ResponseWriter, r *http.Request, params map[string]string) {
@@ -393,6 +401,104 @@ func serverHandlerStatic(w http.ResponseWriter, r *http.Request, params map[stri
 		PPIRatio: ppi,
 		Lat:      lat64,
 		Lng:      lng64,
+		Zoom:     zoom,
+		Pitch:    pitch64,
+		Bearing:  bear64,
+	}
+
+	buffer := new(bytes.Buffer)
+
+	imgType, err := generateImage(buffer, snpsht, width, height, ext)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to generate %v image: %v", ext, err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", imgType)
+	w.Header().Set("Content-Length", strconv.Itoa(buffer.Len()))
+	if _, err = io.Copy(w, buffer); err != nil {
+		log.Println("Got error writing to write out image:", err)
+	}
+
+}
+
+func serverHandlerStaticBounds(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	// /styles/:style-name/static/bbox/:lon,:lat,:lon:zoom[,:bearing[,:pitch]]/:widthx:height[@2x][.:file-extension]
+
+	styleName := strings.ToLower(strings.TrimSpace(params["style-name"]))
+	if styleName != "default" {
+		http.Error(w, fmt.Sprintf("Unknown style %v", styleName), http.StatusNotFound)
+		return
+	}
+	lnglatzParts := strings.Split(params["boundszoompath"], ",")
+	if len(lnglatzParts) < 5 {
+		http.Error(w, fmt.Sprintf("not enough params for lng lat lng lat and zoom: got %v", params["boundszoompath"]), http.StatusBadRequest)
+		return
+	}
+	lng1, err := strconv.ParseFloat(lnglatzParts[0], 64)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not parse lng %v", err), http.StatusBadRequest)
+		return
+	}
+	lat1, err := strconv.ParseFloat(lnglatzParts[1], 64)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not parse lat %v", err), http.StatusBadRequest)
+		return
+	}
+	lng2, err := strconv.ParseFloat(lnglatzParts[2], 64)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not parse lng %v", err), http.StatusBadRequest)
+		return
+	}
+	lat2, err := strconv.ParseFloat(lnglatzParts[3], 64)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not parse lat %v", err), http.StatusBadRequest)
+		return
+	}
+	zoom, err := strconv.ParseFloat(lnglatzParts[4], 64)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not parse zoom %v", err), http.StatusBadRequest)
+		return
+	}
+	var bear64, pitch64 float64
+	if len(lnglatzParts) >= 6 {
+		bear64, err = strconv.ParseFloat(lnglatzParts[5], 64)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("could not parse bearing %v", err), http.StatusBadRequest)
+			return
+		}
+	}
+	if len(lnglatzParts) >= 7 {
+		pitch64, err = strconv.ParseFloat(lnglatzParts[6], 64)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("could not parse pitch %v", err), http.StatusBadRequest)
+			return
+		}
+	}
+	width, height, ppi, ext, err := parseWidthHeightPath(params["widthheightpath"])
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not parse width height %v", err), http.StatusBadRequest)
+		return
+	}
+
+	if ext != "jpg" && ext != "png" {
+		http.Error(w, fmt.Sprintf("only supported extentions are jpg and png, got [%v]\n", ext), http.StatusBadRequest)
+		return
+	}
+
+	hull := spherical.Hull([2]float64{lat1, lng1}, [2]float64{lat2, lng2})
+
+	width = int(float64(width) * ppi)
+	height = int(float64(height) * ppi)
+	center, zoom := bounds.CenterZoom(hull, float64(width), float64(height))
+
+	snpsht := mbgl.Snapshotter{
+		Style:    RootStyle,
+		Width:    uint32(width),
+		Height:   uint32(height),
+		PPIRatio: ppi,
+		Lat:      center[0],
+		Lng:      center[1],
 		Zoom:     zoom,
 		Pitch:    pitch64,
 		Bearing:  bear64,

@@ -106,20 +106,23 @@ func (p aProjection) Project(latlng [2]float64) (xy [2]float64) {
 
 func (p aProjection) Unproject(pt [2]float64) (latlng [2]float64) {
 	d := 180 / math.Pi
-	prj := projections[ESPG3857]
+	prj := projections[p]
 
 	return [2]float64{
 		(2*math.Atan(math.Exp(pt[1]/prj.radius)) - (math.Pi / 2)) * d,
 		pt[0] * d / prj.radius,
 	}
+
+	/*
+			return geo.LatLng{
+				Lat: (2*math.Atan(math.Exp(point.Y/e.r)) - (math.Pi / 2)) * d,
+				Lng: point.X * d / e.r,
+		}
+	*/
+
 }
 
-//	Zoom returns the zoom level for supplied bounds
-//	useful when rendering static map images
-// tile size is assumed to be 256
-//
-//	TODO: add padding support
-func Zoom(bounds *geom.Extent, width, height float64) float64 {
+func ZoomTile(bounds *geom.Extent, width, height float64, tileSize int) float64 {
 	// assume ESPG3857 for now.
 	prj := ESPG3857
 	if bounds == nil {
@@ -133,15 +136,24 @@ func Zoom(bounds *geom.Extent, width, height float64) float64 {
 	se := [2]float64{bounds[1], bounds[2]}
 
 	// 256 is the tile size.
-	ptupper := prj.Transform(prj.Project(nw), 256)
-	ptlower := prj.Transform(prj.Project(se), 256)
+	ptupper := prj.Transform(prj.Project(nw), float64(tileSize))
+	ptlower := prj.Transform(prj.Project(se), float64(tileSize))
 
 	b := geom.NewExtent(ptupper, ptlower)
 	scale := math.Min(width/b.XSpan(), height/b.YSpan())
 	return math.Floor(math.Log(scale) / math.Ln2)
 }
 
-func Center(bounds *geom.Extent) [2]float64 {
+//	Zoom returns the zoom level for supplied bounds
+//	useful when rendering static map images
+// tile size is assumed to be 256
+//
+//	TODO: add padding support
+func Zoom(bounds *geom.Extent, width, height float64) float64 {
+	return ZoomTile(bounds, width, height, 256)
+}
+
+func CenterTile(bounds *geom.Extent, tileSize int) [2]float64 {
 	// assume ESPG3857 for now.
 	prj := ESPG3857
 	if bounds == nil {
@@ -151,27 +163,50 @@ func Center(bounds *geom.Extent) [2]float64 {
 
 	// for lat lng geom.Extent should be laid out as follows:
 	// {west, south, east, north}
-	sw := [2]float64{bounds[1], bounds[0]}
 	ne := [2]float64{bounds[3], bounds[2]}
+	sw := [2]float64{bounds[1], bounds[0]}
 
 	// 256 is the tile size.
-	swPt := prj.Transform(prj.Project(sw), 256)
-	nePt := prj.Transform(prj.Project(ne), 256)
+	swPt := prj.Transform(prj.Project(sw), float64(tileSize))
+	nePt := prj.Transform(prj.Project(ne), float64(tileSize))
 
 	// center point.
 	centerPtX := (swPt[0] + nePt[0]) / 2
 	centerPtY := (swPt[1] + nePt[1]) / 2
 
 	// 256 is the tile size.
-	return prj.Unproject(prj.Untransform([2]float64{centerPtX, centerPtY}, 256))
+	return prj.Unproject(prj.Untransform([2]float64{centerPtX, centerPtY}, float64(tileSize)))
+}
+
+func Center(bounds *geom.Extent) [2]float64 {
+	return CenterTile(bounds, 256)
+}
+
+func CenterZoomTile(bounds *geom.Extent, width, height float64, tileSize int) ([2]float64, float64) {
+	return CenterTile(bounds, tileSize), ZoomTile(bounds, width, height, tileSize)
 }
 
 func CenterZoom(bounds *geom.Extent, width, height float64) ([2]float64, float64) {
-	// assume ESPG3857 for now.
-	prj := ESPG3857
-	if bounds == nil {
-		// we want the whole world.
-		bounds = prj.Bounds()
-	}
-	return Center(bounds), Zoom(bounds, width, height)
+	return CenterZoomTile(bounds, width, height, 256)
+}
+
+func ScaleTile(zoom float64, tileSize int) float64 {
+	return float64(tileSize) * math.Pow(2, zoom)
+}
+
+func Scale(zoom float64) float64 { return ScaleTile(zoom, 256) }
+
+// type aProjection int
+
+func LatLngToPoint(prj aProjection, lat, lng, zoom float64, tilesize int) [2]float64 {
+	prjPt := prj.Project([2]float64{lat, lng})
+	scale := ScaleTile(zoom, tilesize)
+	return prj.Transform(prjPt, scale)
+}
+
+func PointToLatLng(prj aProjection, point [2]float64, zoom float64, tilesize int) (lat, lng float64) {
+	scale := ScaleTile(zoom, tilesize)
+	utPt := prj.Untransform(point, scale)
+	latlng := prj.Unproject(utPt)
+	return latlng[0], latlng[1]
 }
