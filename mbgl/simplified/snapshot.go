@@ -111,7 +111,10 @@ func snapshot(snap Snapshotter) (img Image, err error) {
 
 	img.Width, img.Height = int(result.Image.Width), int(result.Image.Height)
 	bytes := img.Width * img.Height * 4
-	img.Data = C.GoBytes(unsafe.Pointer(result.Image.Data), C.int(bytes))
+	data := C.GoBytes(unsafe.Pointer(result.Image.Data), C.int(bytes))
+	img.Data = make([]byte, len(data))
+	copy(img.Data, data)
+	C.free(unsafe.Pointer(result.Image.Data))
 
 	return img, nil
 }

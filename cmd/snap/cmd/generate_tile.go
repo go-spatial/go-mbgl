@@ -63,8 +63,8 @@ func commandGenerateTile(cmd *cobra.Command, args []string) {
 	defer cancel()
 
 	mbgl.StartSnapshotManager(ctx)
-	center := bounds.Center(cmdGenerateTileTile.Extent3857())
 	zoom := cmdGenerateTileTile.Z
+	center := bounds.Center(cmdGenerateTileTile.Extent3857(), float64(zoom))
 	output := ""
 	if len(args) == 2 {
 		output = args[1]

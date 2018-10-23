@@ -75,25 +75,25 @@ func init() {
 	}
 }
 
-type aProjection int
+type AProjection int
 
 const (
-	ESPG3857 = aProjection(0)
+	ESPG3857 = AProjection(0)
 )
 
-func (p aProjection) String() string       { return projections[int(p)].name }
-func (p aProjection) Bounds() *geom.Extent { return projections[int(p)].bounds }
-func (p aProjection) R() float64           { return projections[int(p)].radius }
-func (p aProjection) MaxLatitude() float64 { return projections[int(p)].maxLatitude }
+func (p AProjection) String() string       { return projections[int(p)].name }
+func (p AProjection) Bounds() *geom.Extent { return projections[int(p)].bounds }
+func (p AProjection) R() float64           { return projections[int(p)].radius }
+func (p AProjection) MaxLatitude() float64 { return projections[int(p)].maxLatitude }
 
-func (p aProjection) Transform(pt [2]float64, scale float64) [2]float64 {
+func (p AProjection) Transform(pt [2]float64, scale float64) [2]float64 {
 	return projections[int(p)].transformer.Transform(pt, scale)
 }
-func (p aProjection) Untransform(pt [2]float64, scale float64) [2]float64 {
+func (p AProjection) Untransform(pt [2]float64, scale float64) [2]float64 {
 	return projections[int(p)].transformer.Untransform(pt, scale)
 }
 
-func (p aProjection) Project(latlng [2]float64) (xy [2]float64) {
+func (p AProjection) Project(latlng [2]float64) (xy [2]float64) {
 	lat, lng := latlng[0], latlng[1]
 	d := math.Pi / 180
 	max := p.MaxLatitude()
@@ -104,7 +104,7 @@ func (p aProjection) Project(latlng [2]float64) (xy [2]float64) {
 	return [2]float64{r * lng * d, r * math.Log((1+sin)/(1-sin)) / 2}
 }
 
-func (p aProjection) Unproject(pt [2]float64) (latlng [2]float64) {
+func (p AProjection) Unproject(pt [2]float64) (latlng [2]float64) {
 	d := 180 / math.Pi
 	prj := projections[p]
 
@@ -136,8 +136,8 @@ func ZoomTile(bounds *geom.Extent, width, height float64, tileSize int) float64 
 	se := [2]float64{bounds[1], bounds[2]}
 
 	// 256 is the tile size.
-	ptupper := prj.Transform(prj.Project(nw), float64(tileSize))
-	ptlower := prj.Transform(prj.Project(se), float64(tileSize))
+	ptupper := LatLngToPoint(prj, nw[0], nw[1], 0, tileSize)
+	ptlower := LatLngToPoint(prj, se[0], se[1], 0, tileSize)
 
 	b := geom.NewExtent(ptupper, ptlower)
 	scale := math.Min(width/b.XSpan(), height/b.YSpan())
@@ -153,7 +153,7 @@ func Zoom(bounds *geom.Extent, width, height float64) float64 {
 	return ZoomTile(bounds, width, height, 256)
 }
 
-func CenterTile(bounds *geom.Extent, tileSize int) [2]float64 {
+func CenterTile(bounds *geom.Extent, zoom float64, tileSize int) [2]float64 {
 	// assume ESPG3857 for now.
 	prj := ESPG3857
 	if bounds == nil {
@@ -166,24 +166,25 @@ func CenterTile(bounds *geom.Extent, tileSize int) [2]float64 {
 	ne := [2]float64{bounds[3], bounds[2]}
 	sw := [2]float64{bounds[1], bounds[0]}
 
-	// 256 is the tile size.
-	swPt := prj.Transform(prj.Project(sw), float64(tileSize))
-	nePt := prj.Transform(prj.Project(ne), float64(tileSize))
+	swPt := LatLngToPoint(prj, sw[0], sw[1], zoom, tileSize)
+	nePt := LatLngToPoint(prj, ne[0], ne[1], zoom, tileSize)
 
 	// center point.
 	centerPtX := (swPt[0] + nePt[0]) / 2
 	centerPtY := (swPt[1] + nePt[1]) / 2
 
 	// 256 is the tile size.
-	return prj.Unproject(prj.Untransform([2]float64{centerPtX, centerPtY}, float64(tileSize)))
+	lat, lng := PointToLatLng(prj, [2]float64{centerPtX, centerPtY}, zoom, tileSize)
+	return [2]float64{lat, lng}
 }
 
-func Center(bounds *geom.Extent) [2]float64 {
-	return CenterTile(bounds, 256)
+func Center(bounds *geom.Extent, zoom float64) [2]float64 {
+	return CenterTile(bounds, zoom, 256)
 }
 
 func CenterZoomTile(bounds *geom.Extent, width, height float64, tileSize int) ([2]float64, float64) {
-	return CenterTile(bounds, tileSize), ZoomTile(bounds, width, height, tileSize)
+	zoom := ZoomTile(bounds, width, height, tileSize)
+	return CenterTile(bounds, zoom, tileSize), zoom
 }
 
 func CenterZoom(bounds *geom.Extent, width, height float64) ([2]float64, float64) {
@@ -196,15 +197,15 @@ func ScaleTile(zoom float64, tileSize int) float64 {
 
 func Scale(zoom float64) float64 { return ScaleTile(zoom, 256) }
 
-// type aProjection int
+// type AProjection int
 
-func LatLngToPoint(prj aProjection, lat, lng, zoom float64, tilesize int) [2]float64 {
+func LatLngToPoint(prj AProjection, lat, lng, zoom float64, tilesize int) [2]float64 {
 	prjPt := prj.Project([2]float64{lat, lng})
 	scale := ScaleTile(zoom, tilesize)
 	return prj.Transform(prjPt, scale)
 }
 
-func PointToLatLng(prj aProjection, point [2]float64, zoom float64, tilesize int) (lat, lng float64) {
+func PointToLatLng(prj AProjection, point [2]float64, zoom float64, tilesize int) (lat, lng float64) {
 	scale := ScaleTile(zoom, tilesize)
 	utPt := prj.Untransform(point, scale)
 	latlng := prj.Unproject(utPt)

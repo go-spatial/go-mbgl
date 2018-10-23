@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/dimfeld/httptreemux"
-	"github.com/disintegration/imaging"
 	"github.com/go-spatial/geom/slippy"
 	"github.com/go-spatial/geom/spherical"
 
@@ -182,12 +181,12 @@ func centerZoom(tilesize int, z, x, y uint) (center [2]float64, zoom float64) {
 		X: x,
 		Y: y,
 	}
-	center = bounds.Center(tile.Extent4326())
 	n := int(math.Log2(float64(tilesize / 256)))
 	zoom = float64(int(z) - n)
 	if zoom < 0.0 {
 		zoom = 0.0
 	}
+	center = bounds.Center(tile.Extent4326(), zoom)
 	return center, zoom
 }
 
@@ -303,7 +302,11 @@ func generateZoomCenterImage(w io.Writer, style string, width, height int, ppi, 
 
 func writeImage(w io.Writer, img image.Image, width, height int, ext string) (string, error) {
 	imageType := "unknown"
-	cimg := imaging.CropCenter(img, width, height)
+	if img == nil {
+		return "", nil
+	}
+	//cimg := imaging.CropCenter(img, width, height)
+	cimg := img
 
 	switch ext {
 	case "png":
