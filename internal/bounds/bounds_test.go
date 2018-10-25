@@ -159,6 +159,10 @@ func TestTransform(t *testing.T) {
 					scale: 2.0,
 					pt:    [2]float64{1.0000022299196951, 0.9999948419882011},
 				},
+				{
+					point: [2]float64{1.2961, 103.831},
+					pt:    [2]float64{0.5000000323418455, 0.49999740908404816},
+				},
 			},
 		},
 	}
@@ -186,11 +190,24 @@ func TestProject(t *testing.T) {
 			fn := func(prj aProjection, tc subcase) func(t *testing.T) {
 				return func(t *testing.T) {
 
-					pt := prj.Project(tc.point)
-					if !(cmp.Float(pt[0], tc.pt[0]) && cmp.Float(pt[1], tc.pt[1])) {
-						t.Errorf(" %v Project, expected %v got %v", prj, tc.pt, pt)
-						t.Logf("%v %v ", cmp.Float(pt[0], tc.pt[0]), cmp.Float(pt[1], tc.pt[1]))
-					}
+					t.Run("Project", func(t *testing.T) {
+
+						pt := prj.Project(tc.point)
+						if !(cmp.Float(pt[0], tc.pt[0]) && cmp.Float(pt[1], tc.pt[1])) {
+							t.Errorf(" %v Project %v, expected %v got %v", prj, tc.point, tc.pt, pt)
+							t.Logf("%v %v ", cmp.Float(pt[0], tc.pt[0]), cmp.Float(pt[1], tc.pt[1]))
+						}
+
+					})
+
+					t.Run("Unproject", func(t *testing.T) {
+						point := prj.Project(tc.pt)
+						if !(cmp.Float(point[0], tc.point[0]) && cmp.Float(point[1], tc.point[1])) {
+							t.Errorf(" %v Unproject %v, expected %v got %v", prj, tc.pt, tc.point, point)
+							t.Logf("%v %v ", cmp.Float(point[0], tc.point[0]), cmp.Float(point[1], tc.point[1]))
+						}
+
+					})
 
 				}
 			}
@@ -207,11 +224,14 @@ func TestProject(t *testing.T) {
 					point: [2]float64{32.7305263087481, -117.180183060805},
 					pt:    [2]float64{-13044438.309391394, 3859590.2188198487},
 				},
+				{
+					point: [2]float64{0.5000000323418455, 0.49999740908404816},
+					pt:    [2]float64{55659.45697719234, 55660.45546583664},
+				},
 			},
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.prj.String(), fn(tc))
 	}
-
 }
