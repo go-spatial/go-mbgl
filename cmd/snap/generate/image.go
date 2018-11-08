@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 
+	"github.com/go-spatial/geom"
 	"github.com/go-spatial/go-mbgl/internal/bounds"
 	mbgl "github.com/go-spatial/go-mbgl/mbgl/simplified"
 )
@@ -48,6 +49,37 @@ type Image struct {
 	// At function.
 	backingStore *os.File
 	initilized   bool
+
+	// this is for debugging.
+	drawBounds bool
+	// bounds need to be in the coordinate system of the image.
+	// the color will be black
+	bounds     [4]float64
+	fullBounds image.Rectangle
+}
+
+func (im *Image) SetDebugBounds(prj bounds.AProjection, extent *geom.Extent, zoom float64, tilesize int) {
+	if extent == nil {
+		// we want the whole world.
+		extent = prj.Bounds()
+	}
+
+	// for lat lng geom.Extent should be laid out as follows:
+	// {west, south, east, north}
+	ne := [2]float64{extent[3], extent[2]}
+	sw := [2]float64{extent[1], extent[0]}
+
+	swPt := bounds.LatLngToPoint(prj, sw[0], sw[1], zoom, tilesize)
+	nePt := bounds.LatLngToPoint(prj, ne[0], ne[1], zoom, tilesize)
+	im.drawBounds = true
+	im.bounds = [4]float64{
+		float64(int((nePt[0] - float64(im.fullBounds.Min.X)) / 4)),
+		float64(int((swPt[1] - float64(im.fullBounds.Min.Y)) / 4)),
+		float64(int((swPt[0] - float64(im.fullBounds.Min.X)) / 4)),
+		float64(int((nePt[1] - float64(im.fullBounds.Min.Y)) / 4)),
+	}
+	log.Printf("fullBounds %v  -- %v", im.fullBounds.Min, im.fullBounds.Max)
+	log.Printf("Setting the debug bounds to:%v", im.bounds)
 }
 
 func (_ Image) ColorModel() color.Model { return color.RGBAModel }
@@ -70,10 +102,25 @@ func (im Image) At(x, y int) color.Color {
 	// rx, ry := x, y
 	var data [4]byte
 
+	if im.drawBounds {
+		//fmt.Printf("Looking at %07v,%07v  -- %07v,%07v                                  \r", rx, ry, im.offsetWidth, im.offsetHeight)
+		if int(im.bounds[0]) == rx || int(im.bounds[2]) == rx || int(im.bounds[1]) == ry || int(im.bounds[3]) == ry {
+			//fmt.Printf("Found part of the bounds return black for %v,%v\r", rx, ry)
+			return color.RGBA{0, 0, 0, 255}
+		}
+	}
+
 	// We need to look through the centers to find the first rect that containts this x,y
 	for i := range im.centers {
 		rect := im.centers[i].Rect
 		if rect.Min.X <= rx && rx <= rect.Max.X && rect.Min.Y <= ry && ry <= rect.Max.Y {
+			/*
+				if im.drawBounds {
+					if rect.Min.X == rx || rect.Max.X == rx || rect.Min.Y == ry || rect.Max.Y == ry {
+						return color.RGBA{0, 255, 0, 255}
+					}
+				}
+			*/
 
 			dx, dy := rx-rect.Min.X, ry-rect.Min.Y
 			idx := int64(im.centers[i].imgWidth*4*dy+(4*dx)) + (im.centers[i].offset)
@@ -93,6 +140,7 @@ func NewImage(prj bounds.AProjection, desiredWidth, desiredHeight int, centerXY 
 
 	const tilesize = 4096 / 2
 	const scale = 4
+
 	numTilesNeeded := int(math.Ceil((math.Max(float64(desiredWidth), float64(desiredHeight))/tilesize + 1) / 2))
 	offset := int(math.Ceil((tilesize - 1) * ppi))
 
@@ -114,6 +162,8 @@ func NewImage(prj bounds.AProjection, desiredWidth, desiredHeight int, centerXY 
 	ry := 0
 	rx := 0
 	bsOffset := int64(0)
+	var min image.Point
+	log.Printf("CenterXY %v", centerXY)
 	for y := -numTilesNeeded; y <= numTilesNeeded; y++ {
 		rx = 0
 		for x := -numTilesNeeded; x <= numTilesNeeded; x++ {
@@ -122,7 +172,14 @@ func NewImage(prj bounds.AProjection, desiredWidth, desiredHeight int, centerXY 
 			center := [2]float64{centerXY[0] + (float64(x*tilesize) * scale), centerXY[1] + (float64(y*tilesize) * scale)}
 			crect.Lat, crect.Lng = bounds.PointToLatLng(prj, center, zoom, tilesize)
 			crect.Rect = image.Rect(rx, ry, rx+offset, ry+offset)
+			if rx == 0 && ry == 0 {
+				min.X, min.Y = int(center[0]-(tilesize/2*(scale))), int(center[1]-(tilesize/2*(scale)))
+				cx, cy := crect.Rect.Dx()/2, crect.Rect.Dy()/2
+				dcx, dcy := (int(center[0])-min.X)/scale, (int(center[1])-min.Y)/scale
+				log.Printf("Min: %v", min)
+				log.Printf("calculated centers: %v,%v -- %v,%v", cx, cy, dcx, dcy)
 
+			}
 			snpsht := mbgl.Snapshotter{
 				Style:    style,
 				Width:    uint32(tilesize),
@@ -146,7 +203,7 @@ func NewImage(prj bounds.AProjection, desiredWidth, desiredHeight int, centerXY 
 			}
 			crect.offset = bsOffset
 			crect.imgWidth = snpImage.Width
-			fmt.Fprintf(os.Stderr, "Wrote to backing store(%v) for %v\r", img.backingStore.Name(), crect)
+			fmt.Fprintf(os.Stderr, "Writing to backing store(%v) for %v\r", img.backingStore.Name(), crect)
 
 			img.centers = append(img.centers, crect)
 
@@ -155,10 +212,12 @@ func NewImage(prj bounds.AProjection, desiredWidth, desiredHeight int, centerXY 
 		}
 		ry += offset
 	}
+	log.Printf("\nfullBoundsMin; %v", min)
+	img.fullBounds.Min = min
 	img.offsetWidth = (rx / 2) - int(float64(desiredWidth/2)*ppi)
-	img.offsetHeight = (ry / 2) - int(float64(desiredWidth/2)*ppi)
+	img.offsetHeight = (ry / 2) - int(float64(desiredHeight/2)*ppi)
 
-	log.Println((rx / 2), ",", (ry / 2), ": offset Width:",
+	log.Println("\n", (rx / 2), ",", (ry / 2), ": offset Width:",
 		img.offsetWidth,
 		" offset Height:",
 		img.offsetHeight,

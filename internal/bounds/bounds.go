@@ -9,6 +9,7 @@ can support these functions.
 package bounds
 
 import (
+	"log"
 	"math"
 
 	"github.com/go-spatial/geom"
@@ -173,9 +174,33 @@ func CenterTile(bounds *geom.Extent, zoom float64, tileSize int) [2]float64 {
 	centerPtX := (swPt[0] + nePt[0]) / 2
 	centerPtY := (swPt[1] + nePt[1]) / 2
 
+	log.Printf("nePt: %v  swPt: %v center: %v", nePt, swPt, [2]float64{centerPtX, centerPtY})
+
 	// 256 is the tile size.
 	lat, lng := PointToLatLng(prj, [2]float64{centerPtX, centerPtY}, zoom, tileSize)
 	return [2]float64{lat, lng}
+}
+
+func WidthHeightTile(bounds *geom.Extent, zoom float64, tileSize int) (width, height float64) {
+	// assume ESPG3857 for now.
+	prj := ESPG3857
+	if bounds == nil {
+		// we want the whole world.
+		bounds = prj.Bounds()
+	}
+
+	// for lat lng geom.Extent should be laid out as follows:
+	// {west, south, east, north}
+	ne := [2]float64{bounds[3], bounds[2]}
+	sw := [2]float64{bounds[1], bounds[0]}
+
+	swPt := LatLngToPoint(prj, sw[0], sw[1], zoom, tileSize)
+	nePt := LatLngToPoint(prj, ne[0], ne[1], zoom, tileSize)
+
+	return math.Abs(swPt[0] - nePt[0]), math.Abs(swPt[1] - nePt[1])
+}
+func WidthHeight(bounds *geom.Extent, zoom float64) (float64, float64) {
+	return WidthHeightTile(bounds, zoom, 256)
 }
 
 func Center(bounds *geom.Extent, zoom float64) [2]float64 {

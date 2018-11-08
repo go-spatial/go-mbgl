@@ -18,7 +18,9 @@ RUN apt-get install -y gcc g++
 RUN apt-get install -y curl zlib1g-dev automake \
                       libtool xutils-dev make pkg-config python-pip \
                       libcurl4-openssl-dev \
-                      libllvm3.9 
+                      libllvm3.9 \
+							 git-lfs;\
+							 apt-get update;
 							
 #
 RUN apt-get update

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/go-spatial/geom"
 	"github.com/go-spatial/geom/spherical"
 	"github.com/go-spatial/go-mbgl/cmd/snap/generate"
 	"github.com/go-spatial/go-mbgl/internal/bounds"
@@ -41,7 +41,12 @@ var (
 	// cmdGenerateBounds is the parameter for specifying a bounds to use to generate an image (lng,lat,lng,lat)
 	cmdGenerateBounds     string
 	cmdGenerateCenterZoom [3]float64 // lat, lng, z
+
+	// zoom for bounds command.
+	cmdGenerateZoom float64
 )
+
+var debugHull *geom.Extent
 
 var cmdGenerate = &cobra.Command{
 	Use:     "generate",
@@ -128,7 +133,33 @@ func ValidateGenerateParams(cmd *cobra.Command, args []string) (err error) {
 		}
 		hull := spherical.Hull(coords[0], coords[1])
 		var center [2]float64
-		center, cmdGenerateCenterZoom[2] = bounds.CenterZoom(hull, float64(cmdGenerateWidth), float64(cmdGenerateHeight))
+
+		// Next we need to see if we have a zoom or width and height. We do this by checking  if zoom
+		// was explicitly set. If so, then we need to make sure width and height weren't set.
+		zset := cmd.Flag("zoom").Changed
+		whset := cmd.Flag("width").Changed || cmd.Flag("height").Changed
+		if zset && whset {
+			return fmt.Errorf("can not specify zoom along with width or height parameters.")
+		}
+
+		if zset {
+			cmdGenerateCenterZoom[2] = cmdGenerateZoom
+			center = bounds.Center(hull, cmdGenerateZoom)
+			// need to set the width and height based on the bounds.
+			width, height := bounds.WidthHeightTile(hull, cmdGenerateZoom, 4096/8)
+			// 4 is the scale factor
+			cmdGenerateWidth = int(width)
+			cmdGenerateHeight = int(height)
+
+			//cmdGenerateWidth = 4096
+			//cmdGenerateHeight = 4096
+			log.Printf("Width %v -- Height %v; %v x %v", cmdGenerateWidth, cmdGenerateHeight, width, height)
+			debugHull = hull
+
+		} else {
+			center, cmdGenerateCenterZoom[2] = bounds.CenterZoom(hull, float64(cmdGenerateWidth), float64(cmdGenerateHeight))
+		}
+
 		cmdGenerateCenterZoom[0], cmdGenerateCenterZoom[1] = center[0], center[1]
 	}
 
@@ -149,19 +180,21 @@ func commandGenerateCenterZoom(cmd *cobra.Command, args []string) {
 	mbgl.StartSnapshotManager(ctx)
 	log.Printf("@%v,%v,%vz", cmdGenerateCenterZoom[0], cmdGenerateCenterZoom[1], cmdGenerateCenterZoom[2])
 
-	if math.Max(float64(cmdGenerateHeight), float64(cmdGenerateWidth)) <= tilesize {
-		// we don't need to combine tiles, we can just return using the normal genImage
-		err := genImage(
-			[2]float64{cmdGenerateCenterZoom[1], cmdGenerateCenterZoom[0]},
-			cmdGenerateCenterZoom[2],
-			cmdGenerateOutputName,
-		)
-		if err != nil {
-			cmd.Println(err.Error())
-			os.Exit(1)
+	/*
+		if math.Max(float64(cmdGenerateHeight), float64(cmdGenerateWidth)) <= tilesize {
+			// we don't need to combine tiles, we can just return using the normal genImage
+			err := genImage(
+				[2]float64{cmdGenerateCenterZoom[1], cmdGenerateCenterZoom[0]},
+				cmdGenerateCenterZoom[2],
+				cmdGenerateOutputName,
+			)
+			if err != nil {
+				cmd.Println(err.Error())
+				os.Exit(1)
+			}
+			os.Exit(0)
 		}
-		os.Exit(0)
-	}
+	*/
 
 	err := getOutfile(cmdGenerateOutputName, func(out io.Writer, ext string) error {
 		prj := bounds.ESPG3857
@@ -177,9 +210,12 @@ func commandGenerateCenterZoom(cmd *cobra.Command, args []string) {
 			cmdGenerateBearing,
 			RootStyle,
 		)
-
 		if err != nil {
 			return err
+		}
+		if debugHull != nil {
+			log.Printf("Setting the hull:%v", debugHull)
+			dstimg.SetDebugBounds(prj, debugHull, cmdGenerateCenterZoom[2], tilesize)
 		}
 		defer dstimg.Close()
 		_, err = writeImage(out, dstimg, cmdGenerateWidth, cmdGenerateHeight, ext)
@@ -201,7 +237,7 @@ func IsValidLngString(lng string) (float64, bool) {
 		log.Println("Got error Parsing ", err)
 		return f64, false
 	}
-	log.Println("Lat value:",f64)
+	log.Println("Lat value:", f64)
 	return f64, -180.0 <= f64 && f64 <= 180.0
 }
 
@@ -268,18 +304,36 @@ func genCenterZoomTilesImage(centerPtX, centerPtY, zoom, ppiratio, pitch, bearin
 }
 
 func init() {
+
+	/*
+
+	 usage
+
+	 snap --bounds --width --height --ppiratio
+
+	 snap --bounds --zoom
+
+	 snap --bounds
+
+	 invalid
+
+	 snap --bounds --zoom --width --height
+
+
+	*/
+
 	pf := cmdGenerate.PersistentFlags()
 	pf.IntVar(&cmdGenerateWidth, "width", 512, "Width of the image to generate.")
 	pf.IntVar(&cmdGenerateHeight, "height", 512, "Height of the image to generate.")
+	pf.Float64Var(&cmdGenerateZoom, "zoom", 0.0, "zoom value")
+
 	pf.Float64Var(&cmdGeneratePPIRatio, "ppiratio", 1.0, "The pixel per inch ratio.")
 	pf.Float64Var(&cmdGeneratePitch, "pitch", 0.0, "The pitch of the map.")
+
 	pf.Float64Var(&cmdGenerateBearing, "bearing", 0.0, "The bearing of the map.")
 	pf.StringVar(&cmdGenerateFormat, "format", "", "Defaults to the ext of the output file, or jpg if not provided.")
 	pf.StringVar(&cmdGenerateCenter, "center", "", "Generate the image based on the center: lat,lng,z ")
-	pf.StringVar(&cmdGenerateBounds, "bounds", "", "Generate the image based on the bounds: lat,lng,lat,lng ")
-	//pf.StringVar(&cmdGenerateTile, "tile", "", "Generate the image based on the tile: z/x/y ")
+	pf.StringVar(&cmdGenerateBounds, "bounds", "", "Generate the image based on the bounds: nelng,nelat,swlng,swlat")
 
-	//cmdGenerate.AddCommand(cmdGenerateBounds)
-	//cmdGenerate.AddCommand(cmdGenerateCenter)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
