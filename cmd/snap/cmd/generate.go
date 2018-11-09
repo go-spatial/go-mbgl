@@ -151,9 +151,6 @@ func ValidateGenerateParams(cmd *cobra.Command, args []string) (err error) {
 			cmdGenerateWidth = int(width)
 			cmdGenerateHeight = int(height)
 
-			//cmdGenerateWidth = 4096
-			//cmdGenerateHeight = 4096
-			log.Printf("Width %v -- Height %v; %v x %v", cmdGenerateWidth, cmdGenerateHeight, width, height)
 			debugHull = hull
 
 		} else {
@@ -178,23 +175,6 @@ func commandGenerateCenterZoom(cmd *cobra.Command, args []string) {
 	defer cancel()
 
 	mbgl.StartSnapshotManager(ctx)
-	log.Printf("@%v,%v,%vz", cmdGenerateCenterZoom[0], cmdGenerateCenterZoom[1], cmdGenerateCenterZoom[2])
-
-	/*
-		if math.Max(float64(cmdGenerateHeight), float64(cmdGenerateWidth)) <= tilesize {
-			// we don't need to combine tiles, we can just return using the normal genImage
-			err := genImage(
-				[2]float64{cmdGenerateCenterZoom[1], cmdGenerateCenterZoom[0]},
-				cmdGenerateCenterZoom[2],
-				cmdGenerateOutputName,
-			)
-			if err != nil {
-				cmd.Println(err.Error())
-				os.Exit(1)
-			}
-			os.Exit(0)
-		}
-	*/
 
 	err := getOutfile(cmdGenerateOutputName, func(out io.Writer, ext string) error {
 		prj := bounds.ESPG3857
@@ -209,13 +189,13 @@ func commandGenerateCenterZoom(cmd *cobra.Command, args []string) {
 			cmdGeneratePitch,
 			cmdGenerateBearing,
 			RootStyle,
+			"", "",
 		)
 		if err != nil {
 			return err
 		}
 		if debugHull != nil {
-			log.Printf("Setting the hull:%v", debugHull)
-			dstimg.SetDebugBounds(prj, debugHull, cmdGenerateCenterZoom[2], tilesize)
+			dstimg.SetDebugBounds(debugHull, cmdGenerateCenterZoom[2])
 		}
 		defer dstimg.Close()
 		_, err = writeImage(out, dstimg, cmdGenerateWidth, cmdGenerateHeight, ext)
@@ -237,7 +217,6 @@ func IsValidLngString(lng string) (float64, bool) {
 		log.Println("Got error Parsing ", err)
 		return f64, false
 	}
-	log.Println("Lat value:", f64)
 	return f64, -180.0 <= f64 && f64 <= 180.0
 }
 
@@ -245,7 +224,6 @@ func IsValidLatString(lat string) (float64, bool) {
 
 	f64, err := strconv.ParseFloat(strings.TrimSpace(lat), 64)
 	if err != nil {
-		log.Println("Got error Parsing ", err)
 		return f64, false
 	}
 	return f64, -90.0 <= f64 && f64 <= 90.0
@@ -300,6 +278,7 @@ func genCenterZoomTilesImage(centerPtX, centerPtY, zoom, ppiratio, pitch, bearin
 		pitch,
 		bearing,
 		style,
+		"", "",
 	)
 }
 

@@ -9,7 +9,6 @@ can support these functions.
 package bounds
 
 import (
-	"log"
 	"math"
 
 	"github.com/go-spatial/geom"
@@ -113,14 +112,6 @@ func (p AProjection) Unproject(pt [2]float64) (latlng [2]float64) {
 		(2*math.Atan(math.Exp(pt[1]/prj.radius)) - (math.Pi / 2)) * d,
 		pt[0] * d / prj.radius,
 	}
-
-	/*
-			return geo.LatLng{
-				Lat: (2*math.Atan(math.Exp(point.Y/e.r)) - (math.Pi / 2)) * d,
-				Lng: point.X * d / e.r,
-		}
-	*/
-
 }
 
 func ZoomTile(bounds *geom.Extent, width, height float64, tileSize int) float64 {
@@ -173,8 +164,6 @@ func CenterTile(bounds *geom.Extent, zoom float64, tileSize int) [2]float64 {
 	// center point.
 	centerPtX := (swPt[0] + nePt[0]) / 2
 	centerPtY := (swPt[1] + nePt[1]) / 2
-
-	log.Printf("nePt: %v  swPt: %v center: %v", nePt, swPt, [2]float64{centerPtX, centerPtY})
 
 	// 256 is the tile size.
 	lat, lng := PointToLatLng(prj, [2]float64{centerPtX, centerPtY}, zoom, tileSize)
