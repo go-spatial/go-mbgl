@@ -19,9 +19,9 @@ RUN apt-get install -y curl zlib1g-dev automake \
                       libtool xutils-dev make pkg-config python-pip \
                       libcurl4-openssl-dev \
                       libllvm3.9 \
-							 git-lfs;\
-							 apt-get update;
-							
+                      git-lfs;\
+                      apt-get update;
+
 #
 RUN apt-get update
 RUN apt-get install -y cmake cmake-data

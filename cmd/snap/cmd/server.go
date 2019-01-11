@@ -10,7 +10,9 @@ import (
 	"io"
 	"log"
 	"math"
+	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -54,16 +56,23 @@ var cmdServer = &cobra.Command{
 	Run: commandServer,
 }
 
-const defaultServerAddress = ":8080"
 
-var cmdServerAddress string = defaultServerAddress
+var cmdServerAddress string = ":0"
 
 func init() {
-	cmdServer.Flags().StringVarP(&cmdServerAddress, "address", "a", defaultServerAddress, "address to bind the tile server to.")
+	cmdServer.Flags().StringVarP(&cmdServerAddress, "address", "a", ":0", "address to bind the tile server to; if not set will use the next open port.")
 }
 
 func commandServer(cmd *cobra.Command, args []string) {
-	fmt.Println("Would start up the server here.", strings.Join(args, " , "))
+
+	listener, err := net.Listen("tcp",cmdServerAddress)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to bind to address(%v):%v",cmdServerAddress,err)
+		os.Exit(2)
+		return
+	}
+
+	fmt.Println("Starting up server on:",listener.Addr())
 	// start our server
 	router := newRouter()
 
@@ -76,7 +85,12 @@ func commandServer(cmd *cobra.Command, args []string) {
 
 	mbgl.StartSnapshotManager(ctx)
 
-	http.ListenAndServe(cmdServerAddress, router)
+	err = http.Serve(listener, router)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error starting server",err)
+		os.Exit(2)
+		return
+	}
 }
 
 func newRouter() *httptreemux.TreeMux {
@@ -259,20 +273,12 @@ func generateTileImage(w io.Writer, style string, tsize float64, z, x, y uint, p
 
 	center, zoom := centerZoom(int(tsize), z, x, y)
 
-	tilesize := uint32(float64(tsize) * ppi)
-	// .20 from expermintation
-	var pxBuffer uint32
-	switch {
-	case zoom >= 2:
-		pxBuffer = uint32(float64(tsize) * 0.10)
-	case zoom >= 10:
-		pxBuffer = uint32(float64(tsize) * 0.20)
-	}
+	tilesize := uint32(tsize)
 
 	snpsht := mbgl.Snapshotter{
 		Style:    style,
-		Width:    tilesize + pxBuffer,
-		Height:   tilesize + pxBuffer,
+		Width:    tilesize,
+		Height:   tilesize,
 		PPIRatio: ppi,
 		Lat:      center[0],
 		Lng:      center[1],
