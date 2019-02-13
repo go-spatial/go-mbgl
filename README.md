@@ -12,6 +12,32 @@ This repository depends on [*git-lfs*](https://git-lfs.github.com/)
 
 * [cmd/snap](cmd/snap) -- Holds the primary CLI (command line interface) tool. This tool servers both as a raster tile server, and static map generator.
 * [mbgl/simplifed](mbgl/simplifed) -- Go bindings for snapshot API.
-* [mbgl/c](mbgl/c) -- the C bridge for Go.
+* [mbgl/c](mbgl/c) -- the C bridge for Go. (_Not working?_)
   * [mbgl/c/linux/lib](mbgl/c/linux/lib) -- location of the precompiled Linux libraries. 
+
+
+## Development Env
+
+Running the following commands should set up a working development environment
+
+```console
+
+docker build -t mbgl .
+
+docker run -it -v it"$(pwd)":/go/src/github.com/go-spatial/go-mbgl
+
+```
+
+## Build snap commandline utility.
+
+```console
+
+cd cmd/snap
+
+go build
+
+```
+
+
+
 
