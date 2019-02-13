@@ -39,11 +39,17 @@ private:
 
     template <class S> friend class Immutable;
     template <class S, class... Args> friend Mutable<S> makeMutable(Args&&...);
+    template <class S, class U> friend Mutable<S> staticMutableCast(const Mutable<U>&);
 };
 
 template <class T, class... Args>
 Mutable<T> makeMutable(Args&&... args) {
     return Mutable<T>(std::make_shared<T>(std::forward<Args>(args)...));
+}
+
+template <class S, class U>
+Mutable<S> staticMutableCast(const Mutable<U>& u) {
+    return Mutable<S>(std::static_pointer_cast<S>(u.ptr));
 }
 
 /**
@@ -63,12 +69,11 @@ public:
         : ptr(std::const_pointer_cast<const S>(std::move(s.ptr))) {}
 
     template <class S>
-    Immutable(Immutable<S>&& s)
+    Immutable(Immutable<S> s)
         : ptr(std::move(s.ptr)) {}
 
-    template <class S>
-    Immutable(const Immutable<S>& s)
-        : ptr(s.ptr) {}
+    Immutable(Immutable&&) = default;
+    Immutable(const Immutable&) = default;
 
     template <class S>
     Immutable& operator=(Mutable<S>&& s) {
@@ -76,17 +81,8 @@ public:
         return *this;
     }
 
-    template <class S>
-    Immutable& operator=(Immutable<S>&& s) {
-        ptr = std::move(s.ptr);
-        return *this;
-    }
-
-    template <class S>
-    Immutable& operator=(const Immutable<S>& s) {
-        ptr = s.ptr;
-        return *this;
-    }
+    Immutable& operator=(Immutable&&) = default;
+    Immutable& operator=(const Immutable&) = default;
 
     const T* get() const { return ptr.get(); }
     const T* operator->() const { return ptr.get(); }
