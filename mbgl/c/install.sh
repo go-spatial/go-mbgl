@@ -62,7 +62,6 @@ function check_dep {
     fi
 }
 
-function no_call1 {
 if [[ $unamestr == "Darwin" ]]; then
     deps="node cmake ccache xcpretty jazzy"
     for dep in $deps; do
@@ -70,14 +69,12 @@ if [[ $unamestr == "Darwin" ]]; then
         check_dep $dep
     done
 else
-    deps="curl git build-essential zlib1g-dev automake
-    libtool xutils-dev make cmake pkg-config python-pip
-    libcurl4-openssl-dev 
-    libllvm3.9
-    libxi-dev libglu1-mesa-dev x11proto-randr-dev
+    deps="git build-essential zlib1g-dev automake
+    libtool make cmake pkg-config
+    libglu1-mesa-dev x11proto-randr-dev
     x11proto-xext-dev libxrandr-dev
     x11proto-xf86vidmode-dev libxxf86vm-dev
-    libxcursor-dev libxinerama-dev nodejs"
+    libxcursor-dev libxinerama-dev" 
 
     # libpng-dev libsqlite3-dev 
 
@@ -86,7 +83,6 @@ else
         check_dep $dep
     done
 fi
-}
 
 if [[ ! $GOPATH ]]; then
     echo "GOPATH must be set"
@@ -139,14 +135,21 @@ else
     LIBDIR=$PKG_ROOT/lib/linux
     INCLUDEDIR=$PKG_ROOT/include
 
-    #git checkout master
-    #git reset --hard --recurse-submodules
+    git checkout 98eac18a2133a7beda12fdfc27d6f88217d800cf
+    git reset --hard --recurse-submodules
+
+    # first we need to install nmp run make to get it passed npm requirement
+    apt-get install -y npm node-gyp nodejs-dev libssl1.0-dev
 	 
     make WITH_OSMESA=ON linux-core
 
+    apt-get install -y libcurl4-openssl-dev 
+
+    make WITH_OSMESA=ON linux-core
+
     if [[ -d ${LIBDIR} ]]; then
-        rm -rf ${LIBDIR}
-	rm -rf ${INCLUDEDIR}
+        rm -rf ${LIBDIR}/*.a
+        rm -rf ${INCLUDEDIR}
     fi
 
     mkdir -p ${LIBDIR}
@@ -160,8 +163,7 @@ else
 
     copy_hpps "platform" "default"
     
-    copy_includes "vendor" "expected"
-    copy_includes "mason_packages/headers" "geometry" "variant"
+    copy_includes "vendor" "expected" "geometry" "variant"
 fi
 
 # install mason-js (mapbox package manager)
