@@ -28,6 +28,9 @@ docker run -it -v it"$(pwd)":/go/src/github.com/go-spatial/go-mbgl
 
 ```
 
+In the docker image if you need to rebuil the c archive files, you can use the `mbgl/c/install.sh` bash script
+to rebuild them.
+
 ## Build snap commandline utility.
 
 ```console
