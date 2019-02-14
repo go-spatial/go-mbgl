@@ -2,6 +2,7 @@ package simplified
 
 /*
 #cgo CXXFLAGS: -I${SRCDIR}/../c/include
+#cgo CXXFLAGS: -I${SRCDIR}/../c/include/include
 #cgo LDFLAGS: -L${SRCDIR}/../c/lib/linux
 
 #cgo LDFLAGS: ${SRCDIR}/../c/lib/linux/libmbgl-core.a

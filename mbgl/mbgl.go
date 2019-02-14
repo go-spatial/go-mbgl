@@ -6,6 +6,7 @@ package mbgl
 #cgo CXXFLAGS: -std=c++14 -std=gnu++14
 #cgo CXXFLAGS: -g
 #cgo CXXFLAGS: -I${SRCDIR}/c/include
+#cgo CXXFLAGS: -I${SRCDIR}/c/include/include
 #cgo CXXFLAGS: -I${SRCDIR}/c/mapbox-gl-native/platform/default
 
 #cgo LDFLAGS: -lmbgl-filesource 

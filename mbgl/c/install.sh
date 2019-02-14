@@ -164,6 +164,8 @@ else
     copy_hpps "platform" "default"
     
     copy_includes "vendor" "expected" "geometry" "variant"
+
+    cp -R $PKG_ROOT/mapbox-gl-native/vendor/geometry.hpp/include/* ${INCLUDEDIR}
 fi
 
 # install mason-js (mapbox package manager)

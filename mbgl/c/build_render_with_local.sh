@@ -6,6 +6,7 @@ g++ \
 	-DRAPIDJSON_HAS_STDSTRING=1 \
 	-D_GLIBCXX_USE_CXX11_ABI=1 \
 	-Iinclude \
+	-Iinclude/include \
 	-ftemplate-depth=1024 \
 	-Wall \
 	-Wextra \
