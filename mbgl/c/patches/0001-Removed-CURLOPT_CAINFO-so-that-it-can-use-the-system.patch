@@ -1,17 +1,7 @@
-From 029bc84f5fb9e1fe30d382ee8c160d4ccb6fd1a3 Mon Sep 17 00:00:00 2001
-From: Gautam Dey <gautam.dey77@gmail.com>
-Date: Tue, 25 Sep 2018 22:06:54 +0000
-Subject: [PATCH] Removed CURLOPT_CAINFO; so that it can use the system default
- for finding the ca certificates.
-
----
- platform/default/http_file_source.cpp | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/platform/default/http_file_source.cpp b/platform/default/http_file_source.cpp
-index 9166d92fb..6e6522c33 100644
---- a/platform/default/http_file_source.cpp
-+++ b/platform/default/http_file_source.cpp
+diff --git a/platform/default/src/mbgl/storage/http_file_source.cpp b/platform/default/src/mbgl/storage/http_file_source.cpp
+index 213b53d..009eb9b 100644
+--- a/platform/default/src/mbgl/storage/http_file_source.cpp
++++ b/platform/default/src/mbgl/storage/http_file_source.cpp
 @@ -325,7 +325,7 @@ HTTPRequest::HTTPRequest(HTTPFileSource::Impl* context_, Resource resource_, Fil
  
      handleError(curl::easy_setopt(handle, CURLOPT_PRIVATE, this));
@@ -21,6 +11,3 @@ index 9166d92fb..6e6522c33 100644
      handleError(curl::easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1));
      handleError(curl::easy_setopt(handle, CURLOPT_URL, resource.url.c_str()));
      handleError(curl::easy_setopt(handle, CURLOPT_WRITEFUNCTION, writeCallback));
--- 
-2.17.1
-

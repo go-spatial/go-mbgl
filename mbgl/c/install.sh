@@ -94,11 +94,16 @@ PKG_ROOT=$GOPATH/src/github.com/go-spatial/go-mbgl/mbgl/c
 
 # download and install sdk
 if [[ ! -d mapbox-gl-native ]]; then
-    git clone --depth=1 --recursive https://github.com/mapbox/mapbox-gl-native
 	 pushd mapbox-gl-native
 	 git config user.email "gautam.dey77@gmail.com"
 	 git config user.name "Gautam Dey"
-	 git am ../patches/*
+
+	 git checkout 98eac18a2133a7beda12fdfc27d6f88217d800cf
+	 git reset --hard
+	 git submodule init
+	 git submodule update
+	 git apply ../patches/*
+
 	 popd
 
 fi
