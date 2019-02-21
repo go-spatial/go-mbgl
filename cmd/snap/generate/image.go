@@ -11,7 +11,7 @@ import (
 	"os"
 
 	"github.com/go-spatial/geom"
-	"github.com/go-spatial/go-mbgl/internal/bounds"
+	"github.com/go-spatial/go-mbgl/bounds"
 	mbgl "github.com/go-spatial/go-mbgl/mbgl/simplified"
 )
 

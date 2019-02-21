@@ -13,8 +13,8 @@ import (
 
 	"github.com/go-spatial/geom"
 	"github.com/go-spatial/geom/spherical"
+	"github.com/go-spatial/go-mbgl/bounds"
 	"github.com/go-spatial/go-mbgl/cmd/snap/generate"
-	"github.com/go-spatial/go-mbgl/internal/bounds"
 	mbgl "github.com/go-spatial/go-mbgl/mbgl/simplified"
 	"github.com/spf13/cobra"
 )

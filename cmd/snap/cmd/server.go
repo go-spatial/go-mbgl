@@ -20,7 +20,7 @@ import (
 	"github.com/go-spatial/geom/slippy"
 	"github.com/go-spatial/geom/spherical"
 
-	"github.com/go-spatial/go-mbgl/internal/bounds"
+	"github.com/go-spatial/go-mbgl/bounds"
 	mbgl "github.com/go-spatial/go-mbgl/mbgl/simplified"
 
 	"github.com/spf13/cobra"
@@ -56,7 +56,6 @@ var cmdServer = &cobra.Command{
 	Run: commandServer,
 }
 
-
 var cmdServerAddress string = ":0"
 
 func init() {
@@ -65,14 +64,14 @@ func init() {
 
 func commandServer(cmd *cobra.Command, args []string) {
 
-	listener, err := net.Listen("tcp",cmdServerAddress)
+	listener, err := net.Listen("tcp", cmdServerAddress)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to bind to address(%v):%v",cmdServerAddress,err)
+		fmt.Fprintf(os.Stderr, "Unable to bind to address(%v):%v", cmdServerAddress, err)
 		os.Exit(2)
 		return
 	}
 
-	fmt.Println("Starting up server on:",listener.Addr())
+	fmt.Println("Starting up server on:", listener.Addr())
 	// start our server
 	router := newRouter()
 
@@ -87,7 +86,7 @@ func commandServer(cmd *cobra.Command, args []string) {
 
 	err = http.Serve(listener, router)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error starting server",err)
+		fmt.Fprintf(os.Stderr, "Error starting server", err)
 		os.Exit(2)
 		return
 	}

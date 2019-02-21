@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-spatial/geom/slippy"
-	"github.com/go-spatial/go-mbgl/internal/bounds"
+	"github.com/go-spatial/go-mbgl/bounds"
 	mbgl "github.com/go-spatial/go-mbgl/mbgl/simplified"
 	"github.com/spf13/cobra"
 )

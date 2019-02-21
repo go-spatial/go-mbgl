@@ -24,7 +24,7 @@ Running the following commands should set up a working development environment
 
 docker build -t mbgl .
 
-docker run -it -v it"$(pwd)":/go/src/github.com/go-spatial/go-mbgl
+docker run --rm -v "$(pwd)":/go/src/github.com/go-spatial/go-mbgl -it mbgl
 
 ```
 

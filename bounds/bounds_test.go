@@ -17,7 +17,7 @@ func TestZoom(t *testing.T) {
 		zoom   float64
 	}
 
-	fn := func(tc tcase) func(t *testing.T) {
+	fn := func(tc tcase) func(*testing.T) {
 		return func(t *testing.T) {
 			zoom := Zoom(tc.bounds, tc.width, tc.height)
 			if !cmp.Float(tc.zoom, zoom) {
@@ -56,7 +56,7 @@ func TestCenterZoom(t *testing.T) {
 		center [2]float64
 	}
 
-	fn := func(tc tcase) func(t *testing.T) {
+	fn := func(tc tcase) func(*testing.T) {
 		return func(t *testing.T) {
 
 			center, zoom := CenterZoom(tc.bounds, tc.width, tc.height)
@@ -116,14 +116,14 @@ func TestTransform(t *testing.T) {
 	}
 
 	type tcase struct {
-		prj   aProjection
+		prj   AProjection
 		cases []subcase
 	}
 
-	fn := func(tc tcase) func(t *testing.T) {
-		return func(t *testing.T) {
+	fn := func(tc tcase) (string, func(*testing.T)) {
+		return tc.prj.String(), func(t *testing.T) {
 
-			fn := func(prj aProjection, tc subcase) func(t *testing.T) {
+			fn := func(prj AProjection, tc subcase) func(*testing.T) {
 				return func(t *testing.T) {
 					t.Run("transform", func(t *testing.T) {
 
@@ -168,7 +168,7 @@ func TestTransform(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.prj.String(), fn(tc))
+		t.Run(fn(tc))
 	}
 
 }
@@ -180,14 +180,14 @@ func TestProject(t *testing.T) {
 	}
 
 	type tcase struct {
-		prj   aProjection
+		prj   AProjection
 		cases []subcase
 	}
 
-	fn := func(tc tcase) func(t *testing.T) {
-		return func(t *testing.T) {
+	fn := func(tc tcase) (string, func(*testing.T)) {
+		return tc.prj.String(), func(t *testing.T) {
 
-			fn := func(prj aProjection, tc subcase) func(t *testing.T) {
+			fn := func(prj AProjection, tc subcase) func(t *testing.T) {
 				return func(t *testing.T) {
 
 					t.Run("Project", func(t *testing.T) {
@@ -232,6 +232,6 @@ func TestProject(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		t.Run(tc.prj.String(), fn(tc))
+		t.Run(fn(tc))
 	}
 }
